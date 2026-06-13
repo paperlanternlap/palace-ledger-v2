@@ -1,5 +1,12 @@
 import { useEffect, useState } from "react";
 import { supabase } from "./supabase";
+import {
+  Home,
+  Users,
+  ScrollText,
+  Gift,
+  FileText,
+} from "lucide-react";
 
 function App() {
   const [characters, setCharacters] = useState([]);
@@ -9,6 +16,12 @@ function App() {
   
   const [editRp, setEditRp] = useState("");
   const [editFavor, setEditFavor] = useState("");
+  const [inventory, setInventory] = useState([]);
+  const [history, setHistory] = useState([]);
+  const [showRpModal, setShowRpModal] = useState(false);
+  const [rpAmount, setRpAmount] = useState("");
+  const [showFavorModal, setShowFavorModal] = useState(false);
+  const [favorAmount, setFavorAmount] = useState("");
   useEffect(() => {
     getCharacters();
   }, []);
@@ -26,9 +39,9 @@ function App() {
       console.error(error);
   
     } else {
-  
+      console.log("CHARACTERS =", data);
+      console.log("AVATAR =", data?.[0]?.avatar_url);
       setCharacters(data);
-  
     }
   
   }
@@ -48,67 +61,269 @@ function App() {
       getCharacters();
     }
   }
+  async function getInventory(characterId) {
+    const { data, error } = await supabase
+      .from("character_inventory")
+      .select("*")
+      .eq("character_id", characterId);
+  
+    console.log("ALL INVENTORY =", data);
+    console.log("ERROR =", error);
+  
+    if (error) {
+      console.error(error);
+    } else {
+      setInventory(data);
+    }
+  }
+
+  async function getHistory(characterId) {
+    const { data, error } = await supabase
+      .from("character_history")
+      .select("*")
+      .eq("character_id", characterId)
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      console.error(error);
+    } else {
+      setHistory(data);
+    }
+  }
+
+  async function addRp() {
+    if (!rpAmount || !selectedCharacter) return;
+
+    const newRp = Number(selectedCharacter.rp) + Number(rpAmount);
+
+    const { error } = await supabase
+      .from("characters")
+      .update({ rp: newRp })
+      .eq("id", selectedCharacter.id);
+
+    if (error) {
+      console.error(error);
+      return;
+    }
+
+    await supabase
+      .from("character_history")
+      .insert({
+        character_id: selectedCharacter.id,
+        action: "เพิ่ม RP",
+        value: `+${rpAmount} RP`,
+      });
+
+    setSelectedCharacter({
+      ...selectedCharacter,
+      rp: newRp,
+    });
+
+    setRpAmount("");
+    setShowRpModal(false);
+
+    await getHistory(selectedCharacter.id);
+    getCharacters();
+  }
+  async function addFavor() {
+    if (!favorAmount || !selectedCharacter) return;
+
+    const newFavor = Number(selectedCharacter.favor) + Number(favorAmount);
+
+    const { error } = await supabase
+      .from("characters")
+      .update({ favor: newFavor })
+      .eq("id", selectedCharacter.id);
+
+    if (error) {
+      console.error(error);
+      return;
+    }
+
+    await supabase
+      .from("character_history")
+      .insert({
+        character_id: selectedCharacter.id,
+        action: "เพิ่มโปรดปราน",
+        value: `+${favorAmount} Favor`,
+      });
+
+    setSelectedCharacter({
+      ...selectedCharacter,
+      favor: newFavor,
+    });
+
+    setFavorAmount("");
+    setShowFavorModal(false);
+
+    await getHistory(selectedCharacter.id);
+    getCharacters();
+  }
+
   return (
     
     
     
-    <div
+<div className="flex flex-col lg:flex-row min-h-screen bg-stone-100">
+ <div className="w-full lg:w-64 shrink-0 bg-[#fcfaf6] border-b lg:border-b-0 lg:border-r border-[#e6dfd0] p-4 lg:p-6">
 
-    style={{
+ <div className="mb-8">
 
-      display: "flex",
+  <h2 className="text-3xl font-bold">
+    หลันโจว
+  </h2>
 
-      minHeight: "100vh",
+  <p className="text-xs text-stone-400 tracking-widest">
+    PALACE LEDGER
+  </p>
 
-      backgroundColor: "#f7f4ed",
+</div>
 
-    }}
-  >
- <div className="w-64 bg-white border-r border-stone-200 p-6">
+<div className="flex lg:block gap-2 overflow-x-auto lg:overflow-visible pb-2 lg:pb-0">
 
- <h2 className="text-3xl font-bold mb-8">
-  🏯 หลันโจว
+  <div className="shrink-0 p-3 rounded-xl hover:bg-stone-100 cursor-pointer">
+  <div className="flex items-center gap-3 p-3 rounded-xl hover:bg-stone-100 cursor-pointer">
+
+<Home size={18} />
+
+Dashboard
+
+</div>
+  </div>
+
+  <div className="shrink-0 p-3 rounded-xl bg-amber-100 text-amber-900 font-semibold">
+  <div className="flex items-center gap-3 p-3 rounded-xl bg-amber-100 text-amber-900 font-semibold">
+  <Users size={18} />
+  Characters
+</div>
+  </div>
+
+  <div className="shrink-0 p-3 rounded-xl hover:bg-stone-100 cursor-pointer">
+  <div className="flex items-center gap-3 p-3 rounded-xl hover:bg-stone-100 cursor-pointer">
+  <ScrollText size={18} />
+  RP Queue
+  </div>
+  </div>
+
+  <div className="shrink-0 p-3 rounded-xl hover:bg-stone-100 cursor-pointer">
+  <div className="flex items-center gap-3 p-3 rounded-xl hover:bg-stone-100 cursor-pointer">
+  <Gift size={18} />
+  Shop
+  </div>
+  </div>
+
+  <div className="shrink-0 p-3 rounded-xl hover:bg-stone-100 cursor-pointer">
+  <div className="flex items-center gap-3 p-3 rounded-xl hover:bg-stone-100 cursor-pointer">
+  <FileText size={18} />
+  Activity log
+  </div>
+  </div>
+
+</div>
+
+</div>
+
+<div className="flex-1 min-w-0 p-3 md:p-4 lg:p-5">
+<div className="grid grid-cols-2 xl:grid-cols-5 gap-5 mb-8">
+
+<div className="bg-[#fcfaf6] rounded-3xl p-5 border border-[#ddd0bb] shadow-sm">
+  <p>Characters</p>
+  <h2 className="text-3xl font-bold mt-1">
+  {characters.length}
 </h2>
+</div>
+<div className="bg-[#fcfaf6] rounded-3xl p-5 border border-[#ddd0bb] shadow-sm">
+  <p>รอตรวจสอบ</p>
+  <h2 className="text-4xl font-bold mt-2">
 
-<div className="space-y-2">
+{
 
-  <div className="p-3 rounded-xl hover:bg-stone-100 cursor-pointer">
-    🏠 Dashboard
-  </div>
+  characters.filter(
 
-  <div className="p-3 rounded-xl bg-amber-100 text-amber-900 font-semibold">
-    👘 Characters
-  </div>
+    c => c.status === "รอตรวจสอบ"
 
-  <div className="p-3 rounded-xl hover:bg-stone-100 cursor-pointer">
-    📝 RP Queue
-  </div>
+  ).length
 
-  <div className="p-3 rounded-xl hover:bg-stone-100 cursor-pointer">
-    🎁 Shop
-  </div>
+}
 
-  <div className="p-3 rounded-xl hover:bg-stone-100 cursor-pointer">
-    📜 Activity Log
-  </div>
+</h2>
+</div>
 
+<div className="bg-[#fcfaf6] rounded-3xl p-5 border border-[#ddd0bb] shadow-sm">
+  <p>อนุมัติแล้ว</p>
+  <h2 className="text-4xl font-bold mt-2">
+
+{
+
+  characters.filter(
+
+    c => c.status === "อนุมัติแล้ว"
+
+  ).length
+
+}
+
+</h2>
+</div>
+
+<div className="bg-[#fcfaf6] rounded-3xl p-5 border border-[#ddd0bb] shadow-sm">
+  <p>ไม่ผ่าน</p>
+  <h2 className="text-4xl font-bold mt-2">
+
+{
+
+  characters.filter(
+
+    c => c.status === "ไม่ผ่าน"
+
+  ).length
+
+}
+
+</h2>
+</div>
+
+<div className="bg-[#fcfaf6] rounded-3xl p-5 border border-[#ddd0bb] shadow-sm">
+  <p>ถอนตัว</p>
+  <h2 className="text-4xl font-bold mt-2">
+
+{
+
+  characters.filter(
+
+    c => c.status === "ถอนตัว"
+
+  ).length
+
+}
+
+</h2>
 </div>
 
 </div>
-
-<div style={{ flex: 1, padding: "20px" }}>
+ {/* รายชื่อ */}
+<div className="bg-[#fcfaf6] rounded-3xl p-6 md:p-8 shadow-sm border border-[#ddd0bb] overflow-hidden">
  
 
-<div
-  style={{
-    display: "flex",
-    gap: "20px",
-  }}
->
-  {/* รายชื่อ */}
+  <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-8">
+    <h2 className="text-3xl font-bold text-[#4b3a2a]">
+      Characters
+    </h2>
 
-  <div className="w-80 bg-white rounded-3xl p-6 shadow-sm">
-    <h3>Characters</h3>
+    <div className="flex flex-col sm:flex-row gap-3">
+      <input
+        type="text"
+        placeholder="ค้นหาชื่อตัวละคร หรือ ผู้เล่น..."
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+        className="w-full lg:w-80 h-11 px-4 rounded-xl border border-[#ddd0bb] bg-white"
+      />
+
+      <button className="bg-[#8f9c72] hover:bg-[#7d8a63] text-white px-5 rounded-xl h-11 font-medium">
+        + เพิ่มตัวละคร
+      </button>
+    </div>
+  </div>
     <div
   style={{
     display: "flex",
@@ -119,40 +334,40 @@ function App() {
 >
   {[
     "ทั้งหมด",
-    "รอตรวจสอบ",
-    "ยืนยันตัวละครแล้ว",
-    "อนุมัติแล้ว",
-    "ไม่ผ่าน",
-    "ถอนตัวละคร",
+   "ยืนยันตัวละครแล้ว",
+
+  "รอตรวจสอบ",
+
+  "อนุมัติแล้ว",
+
+  "ไม่ผ่าน",
+
+  "ถอนตัวละคร",
   ].map((status) => (
     <button
       key={status}
       onClick={() => setSelectedStatus(status)}
       style={{
-        padding: "6px 10px",
+        padding: "4px 8px",        
         borderRadius: "8px",
-        border: "1px solid #ccc",
+        border: "1px solid #ddd0bb",
         background:
-          selectedStatus === status ? "#d9c7a3" : "white",
+selectedStatus === status
+? "#bfc8a8"
+: "#ffffff",
+color:
+selectedStatus === status
+? "#4d4032"
+: "#666"
       }}
     >
       {status}
     </button>
   ))}
 </div>
-<input
-  type="text"
-  placeholder="🔍 ค้นหาตัวละคร..."
-  value={search}
-  onChange={(e) => setSearch(e.target.value)}
-  style={{
-    width: "100%",
-    padding: "10px",
-    borderRadius: "8px",
-    border: "1px solid #ddd",
-    marginBottom: "15px",
-  }}
-/>
+<div className="grid xl:grid-cols-[260px_1fr] gap-5">
+
+<div className="space-y-3">
 {characters
   .filter(
     (character) =>
@@ -180,157 +395,346 @@ function App() {
         setSelectedCharacter(character);
         setEditRp(character.rp);
         setEditFavor(character.favor);
+        getInventory(character.id);
+        getHistory(character.id);
       }}
-      className="
-        bg-stone-50
-        rounded-2xl
-        p-4
-        mb-3
-        cursor-pointer
-        hover:bg-amber-50
-        transition
-      "
+      className={`
+rounded-xl
+  p-3
+  cursor-pointer
+  border
+  shadow-sm
+  transition-all
+  hover:shadow-md
+  hover:border-[#d8cfbf]
+        ${
+          selectedCharacter?.id === character.id
+            ? "bg-[#eef1e3] border-[#bfc8a8] shadow-md"
+            : "bg-[#f8f4ed] border-[#ddd0bb]"
+        }
+      `}
     >
-       <div>
+       <div className="flex items-center justify-between gap-3">
 
-       <h4 className="font-bold text-lg">
+{character.avatar_url ? (
+  <img
+    src={character.avatar_url}
+    alt={character.character_name}
+    referrerPolicy="no-referrer"
+    className="w-10 h-10 rounded-full object-cover bg-stone-200"
+  />
+) : (
+  <div className="w-10 h-10 rounded-full bg-stone-200" />
+)}
 
-{character.character_name}
+<div className="flex-1">
+  <h4 className="font-semibold text-sm">
+    {character.character_name}
+  </h4>
 
-</h4>
-
-<p
-
-  style={{
-
-    margin: "4px 0",
-
-    fontSize: "13px",
-
-    color: "#777",
-
-  }}
-
->
-
-  {character.role} | {character.position}
-
+  <p className="text-xs text-stone-500 mt-1">
+  ผู้เล่น : {character.player_name}
 </p>
 
-<small>{character.status}</small>
+</div>
+
+<span
+  className={`
+    px-2 py-1 rounded-full shrink-0 text-xs font-medium
+
+    ${
+      character.status === "ยืนยันตัวละครแล้ว"
+        ? "bg-green-100 text-green-700"
+        : character.status === "รอตรวจสอบ"
+        ? "bg-yellow-100 text-yellow-700"
+        : character.status === "อนุมัติแล้ว"
+        ? "bg-blue-100 text-blue-700"
+        : character.status === "ไม่ผ่าน"
+        ? "bg-red-100 text-red-700"
+        : "bg-stone-100 text-stone-700"
+    }
+  `}
+>
+  {character.status}
+</span>
 
 </div>
       </div>
     ))}
   </div>
+{/* ปิดคอลัมน์ซ้าย */}
 
   {/* รายละเอียด */}
 
-  <div className="flex-1 bg-white rounded-3xl p-8 shadow-sm">
+   <div className="w-full min-w-0 border border-[#e3d6bf] rounded-3xl p-8 bg-[#fdfbf7] overflow-hidden">
   {selectedCharacter ? (
+    <>
     <div>
-      <h1 className="text-6xl font-bold text-center">
-  {selectedCharacter.character_name}
-</h1>
+   <div className="grid lg:grid-cols-[180px_1fr] gap-8 items-start">
 
-<p className="text-center text-stone-500 mt-3">
-  {selectedCharacter.role} | {selectedCharacter.position}
-</p>
-
-      <div className="h-px bg-stone-200 my-6"></div>
-
-      
-
-      <div
-  style={{
-    display: "flex",
-    gap: "15px",
-    marginTop: "15px",
-    marginBottom: "15px",
-  }}
->
-<div
-  style={{
-    flex: 1,
-    background: "#faf7f2",
-    padding: "20px",
-    borderRadius: "12px",
-    textAlign: "center",
-  }}
->
-<p className="text-stone-500">
-  ⭐ RP
-</p>
-
-<h2 className="text-5xl font-bold">
-  {selectedCharacter.rp}
-</h2>
-</div>
-
-  <div
-    style={{
-      flex: 1,
-      background: "#faf7f2",
-      padding: "20px",
-      borderRadius: "12px",
-      textAlign: "center",
-    }}
-  >
-<p className="text-stone-500">
-  ❤️ Favor
-</p>
-
-<h2 className="text-5xl font-bold">
-  {selectedCharacter.favor}
-</h2>
+{selectedCharacter.avatar_url && selectedCharacter.avatar_url.trim() !== "" ? (
+  <img
+    src={selectedCharacter.avatar_url}
+    alt={selectedCharacter.character_name}
+    referrerPolicy="no-referrer"
+    className="w-[180px] h-[250px] object-cover rounded-3xl shadow-sm border border-[#e3d6bf] mx-auto lg:mx-0"
+  />
+) : (
+  <div className="w-56 h-72 bg-stone-200 rounded-2xl flex items-center justify-center">
+    ไม่มีรูป
   </div>
+)}
+
+<div className="flex-1 pt-2">
+
+<div className="flex items-start justify-between w-full mb-5">
+  <div className="flex-1 min-w-0">
+    <div className="flex items-center gap-2 mb-3">
+      <h1 className="text-3xl font-bold text-[#5b4534] leading-none">
+        {selectedCharacter.character_name}
+      </h1>
+      <span className="px-3 py-1 rounded-xl bg-[#eef1e3] text-[#5f7044] text-xs font-medium whitespace-nowrap">
+        {selectedCharacter.status}
+      </span>
+    </div>
+    <p className="text-stone-500 text-sm">
+      {selectedCharacter.role}
+    </p>
+  </div>
+  <button className="ml-auto border border-[#e3d6bf] rounded-xl px-5 py-2 bg-white hover:bg-stone-50 text-sm">
+    ✎ แก้ไขข้อมูล
+  </button>
 </div>
-<div className="text-center space-y-2">
 
-  <p>
-    🏯 ตำหนัก: {selectedCharacter.palace}
-  </p>
-
-  <p>
-    📌 สถานะ: {selectedCharacter.status}
-  </p>
-
-  <p>
-    👤 ผู้เล่น: {selectedCharacter.player_name}
-  </p>
-
-  <p>
-    🆔 Username: {selectedCharacter.username}
-  </p>
-
-</div>
-
-<div className="h-px bg-stone-200 my-6"></div>
-      <div
-  style={{
-    marginTop: "20px",
-    display: "flex",
-    gap: "10px",
-  }}
->
-  <button>✏️ แก้ไขข้อมูล</button>
-
-  <button>✅ อนุมัติ</button>
-
-  <button>❌ ไม่ผ่าน</button>
-
-  <button>🚪 ถอนตัวละคร</button>
-</div>
+  <div className="flex items-center justify-between mt-6">
+    <div className="flex items-start gap-10 border-l border-r border-[#e8dfd0] px-5 py-1">
+      <div className="min-w-[70px]">
+        <p className="text-[11px] text-stone-400 mb-1">ผู้เล่น</p>
+        <p className="font-medium text-[#4b3a2a]">{selectedCharacter.player_name}</p>
       </div>
-  ) : (
-    <h2>เลือกตัวละคร</h2>
-  )}
-</div>
+      <div className="min-w-[70px]">
+        <p className="text-[11px] text-stone-400 mb-1">ตำแหน่ง</p>
+        <p className="font-medium text-[#4b3a2a]">{selectedCharacter.position}</p>
+      </div>
+      <div className="min-w-[70px]">
+        <p className="text-[11px] text-stone-400 mb-1">ตำหนัก</p>
+        <p className="font-medium text-[#4b3a2a]">{selectedCharacter.palace}</p>
+      </div>
+    </div>
+
+<div className="border border-[#e3d6bf] rounded-2xl overflow-hidden bg-[#fdfbf7] w-[220px] shadow-sm">
+  <div className="flex justify-between items-center px-5 py-3">
+    <span className="text-sm text-stone-500">RP</span>
+    <span className="text-2xl font-bold text-[#4b3a2a]">{selectedCharacter.rp}</span>
+  </div>
+  <div className="h-px bg-[#e8dfd0]" />
+  <div className="flex justify-between items-center px-5 py-3">
+    <span className="text-sm text-stone-500">โปรดปราน</span>
+    <span className="text-2xl font-bold text-[#4b3a2a]">{selectedCharacter.favor}</span>
+  </div>
 </div>
 
+</div>
+
+  <div className="mt-8">
+    <p className="text-xs uppercase tracking-wider text-stone-400">
+      เข้าร่วมเมื่อ
+    </p>
+    <p className="mt-1">10 พ.ค. 2025</p>
   </div>
- 
+
+</div>
+
+</div>
+</div>
+      
+<div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
+
+<button
+  onClick={() => setShowRpModal(true)}
+  className="
+    bg-[#eef1e3] text-[#4f6b35] hover:bg-[#dfe5ce] transition-colors
+    rounded-2xl
+    py-4
+    text-lg
+    font-semibold
+    shadow-sm
+  "
+>
+  ＋ RP
+</button>
+
+<button
+  onClick={() => setShowFavorModal(true)}
+  className="
+    bg-[#fff0ee] text-[#cc5c4f] hover:bg-[#ffe2dd] transition-colors
+    rounded-2xl
+    py-4
+    text-lg
+    font-semibold
+    shadow-sm
+  "
+>
+  ＋ โปรดปราน
+</button>
+
+<button
+  className="
+    bg-[#f1f2fb] text-[#5566a5] hover:bg-[#e4e8ff] transition-colors
+    rounded-2xl
+    py-4
+    text-lg
+    font-semibold
+    shadow-sm
+  "
+>
+  ＋ ไอเทม
+</button>
+
+</div>
+<div className="h-px bg-[#e8dfd0] my-8"></div>
+<div className="grid grid-cols-1 xl:grid-cols-2 gap-8 mt-10">
+
+  <div className="bg-[#fdfbf7] rounded-3xl p-7 min-h-[340px] border border-[#e3d6bf] shadow-sm">
+    <h3 className="text-2xl font-bold text-[#4b3a2a] mb-6">
+      Inventory
+    </h3>
+
+    <div className="space-y-2">
+      {inventory.map((item) => (
+        <div
+          key={item.id}
+          className="flex justify-between py-3 border-b border-[#e8dfd0]"
+        >
+          <span>{item.item_name}</span>
+          <span>x{item.quantity}</span>
+        </div>
+      ))}
+    </div>
   </div>
+
+  <div className="bg-[#fdfbf7] rounded-3xl p-7 min-h-[340px] border border-[#e3d6bf] shadow-sm">
+    <h3 className="text-2xl font-bold text-[#4b3a2a] mb-6">
+      กิจกรรมล่าสุด
+    </h3>
+
+    <div className="space-y-4">
+      {history.length === 0 ? (
+        <p className="text-stone-400">
+          ยังไม่มีกิจกรรม
+        </p>
+      ) : (
+        history.slice(0, 8).map((log) => (
+          <div
+            key={log.id}
+            className="border-b border-[#e8dfd0] pb-3"
+          >
+            <p className="font-medium text-sm text-[#4b3a2a]">
+              {log.action}
+            </p>
+            <p className="text-xs text-stone-500 mt-1">
+              {log.value}
+            </p>
+            <p className="text-xs text-stone-400 mt-1">
+              {new Date(log.created_at).toLocaleString('th-TH')}
+            </p>
+          </div>
+        ))
+      )}
+    </div>
+  </div>
+
+</div>
+    </>
+ ) : (
+  <div className="h-full flex items-center justify-center">
+
+    <div className="text-center">
+
+      <h2 className="text-3xl font-bold text-stone-700">
+        เลือกตัวละคร
+      </h2>
+
+      <p className="text-stone-400 mt-3">
+        เลือกตัวละครจากรายการด้านซ้าย
+        เพื่อดูข้อมูล รายการไอเทม และประวัติการดำเนินการ
+      </p>
+
+    </div>
+
+  </div>
+)}
+</div>
+</div>
+</div>
+  </div>
+  {/* Modal for เพิ่ม RP */}
+  {showRpModal && (
+    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+      <div className="bg-white rounded-2xl p-6 w-80">
+        <h2 className="text-xl font-semibold mb-4">
+          เพิ่ม RP
+        </h2>
+
+        <input
+          type="number"
+          value={rpAmount}
+          onChange={(e) => setRpAmount(e.target.value)}
+          className="w-full border rounded-xl p-3"
+        />
+
+        <div className="flex gap-2 mt-4">
+          <button
+            onClick={() => setShowRpModal(false)}
+            className="flex-1 border rounded-xl py-2"
+          >
+            ยกเลิก
+          </button>
+
+          <button
+            onClick={addRp}
+            className="flex-1 bg-green-600 text-white rounded-xl py-2"
+          >
+            บันทึก
+          </button>
+        </div>
+      </div>
+    </div>
+  )}
+{showFavorModal && (
+  <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+    <div className="bg-white rounded-2xl p-6 w-80">
+      <h2 className="text-xl font-semibold mb-4">
+        เพิ่มโปรดปราน
+      </h2>
+
+      <input
+        type="number"
+        value={favorAmount}
+        onChange={(e) => setFavorAmount(e.target.value)}
+        className="w-full border rounded-xl p-3"
+      />
+
+      <div className="flex gap-2 mt-4">
+        <button
+          onClick={() => setShowFavorModal(false)}
+          className="flex-1 border rounded-xl py-2"
+        >
+          ยกเลิก
+        </button>
+
+        <button
+          onClick={addFavor}
+          className="flex-1 bg-green-600 text-white rounded-xl py-2"
+        >
+          บันทึก
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+  </div>
+
   
   )
   
