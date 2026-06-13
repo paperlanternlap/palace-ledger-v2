@@ -118,6 +118,7 @@ function App() {
         character_id: selectedCharacter.id,
         action: "เพิ่ม RP",
         value: `+${rpAmount} RP`,
+        type: "rp",
       });
 
     setSelectedCharacter({
@@ -150,6 +151,7 @@ function App() {
         character_id: selectedCharacter.id,
         action: "เพิ่มโปรดปราน",
         value: `+${favorAmount} Favor`,
+        type: "favor",
       });
 
     setSelectedCharacter({
@@ -470,7 +472,7 @@ rounded-xl
 
   <div className="flex flex-col xl:flex-row xl:items-center justify-between mt-4 gap-6">
     <div className="flex items-start gap-8 border-l border-r border-[#e8dfd0] px-5 py-1 flex-1">
-      <div className="min-w-[120px]">
+      <div className="min-w-[70px]">
         <p className="text-[11px] text-stone-400 mb-1">ผู้เล่น</p>
         <p className="font-medium text-[#4b3a2a]">{selectedCharacter.player_name}</p>
 
@@ -556,11 +558,11 @@ rounded-xl
 
 </div>
 <div className="h-px bg-[#e8dfd0] my-8"></div>
-<div className="grid grid-cols-1 xl:grid-cols-2 gap-8 mt-10">
+<div className="grid grid-cols-1 xl:grid-cols-[260px_1fr] gap-8 mt-10">
 
   <div className="bg-[#fdfbf7] rounded-3xl p-7 min-h-[340px] border border-[#e3d6bf] shadow-sm">
-    <h3 className="text-2xl font-bold text-[#4b3a2a] mb-6">
-      Inventory
+    <h3 className="text-xl font-bold text-[#4b3a2a] mb-6">
+      คลังเก็บของ
     </h3>
 
     <div className="space-y-2">
@@ -576,33 +578,50 @@ rounded-xl
     </div>
   </div>
 
-  <div className="bg-[#fdfbf7] rounded-3xl p-7 min-h-[340px] border border-[#e3d6bf] shadow-sm">
-    <h3 className="text-2xl font-bold text-[#4b3a2a] mb-6">
+  <div className="bg-[#fdfbf7] rounded-3xl p-7 h-[500px] border border-[#e3d6bf] shadow-sm">
+    <h3 className="text-xl font-bold text-[#4b3a2a] mb-6">
       กิจกรรมล่าสุด
     </h3>
-
-    <div className="space-y-4">
+    <div className="h-[400px] overflow-y-auto pr-2">
       {history.length === 0 ? (
         <p className="text-stone-400">
           ยังไม่มีกิจกรรม
         </p>
       ) : (
-        history.slice(0, 8).map((log) => (
-          <div
-            key={log.id}
-            className="border-b border-[#e8dfd0] pb-3"
-          >
-            <p className="font-medium text-sm text-[#4b3a2a]">
-              {log.action}
-            </p>
-            <p className="text-xs text-stone-500 mt-1">
-              {log.value}
-            </p>
-            <p className="text-xs text-stone-400 mt-1">
-              {new Date(log.created_at).toLocaleString('th-TH')}
-            </p>
-          </div>
-        ))
+        history.map((log, index) => {
+          const color =
+            log.type === "rp"
+              ? "bg-green-100 border-green-300"
+              : log.type === "favor"
+              ? "bg-rose-100 border-rose-300"
+              : log.type === "item"
+              ? "bg-blue-100 border-blue-300"
+              : "bg-stone-100 border-stone-300";
+
+          return (
+            <div key={log.id} className="relative pl-10 pb-6">
+              {index !== history.length - 1 && (
+                <div className="absolute left-[9px] top-5 w-px h-full bg-[#e8dfd0]" />
+              )}
+
+              <div className={`absolute left-0 top-1 w-5 h-5 rounded-full border ${color}`} />
+
+              <div className="pb-2 flex items-center gap-4 flex-wrap">
+                <p className="text-xs text-stone-400 whitespace-nowrap">
+                  {new Date(log.created_at).toLocaleString('th-TH')}
+                </p>
+
+                <p className="font-semibold text-[#4b3a2a] whitespace-nowrap">
+                  {log.value}
+                </p>
+
+                <span className="px-3 py-1 rounded-xl text-xs bg-[#f3f0e8] text-[#6b5a49] whitespace-nowrap">
+                  {log.action}
+                </span>
+              </div>
+            </div>
+          );
+        })
       )}
     </div>
   </div>
