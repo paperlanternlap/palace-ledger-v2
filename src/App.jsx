@@ -26,6 +26,12 @@ function App() {
     getCharacters();
   }, []);
   
+  // Helper to refresh character data and history
+  const refreshSelectedCharacterData = async (characterId) => {
+    await getHistory(characterId);
+    await getCharacters();
+  };
+  
   async function getCharacters() {
 
     const { data, error } = await supabase
@@ -121,9 +127,7 @@ function App() {
 
     setRpAmount("");
     setShowRpModal(false);
-
-    await getHistory(selectedCharacter.id);
-    getCharacters();
+    await refreshSelectedCharacterData(selectedCharacter.id);
   }
   async function addFavor() {
     if (!favorAmount || !selectedCharacter) return;
@@ -155,10 +159,27 @@ function App() {
 
     setFavorAmount("");
     setShowFavorModal(false);
-
-    await getHistory(selectedCharacter.id);
-    getCharacters();
+    await refreshSelectedCharacterData(selectedCharacter.id);
   }
+
+  // Status counts for statistic cards
+  const statusCounts = {
+    pending: characters.filter(c => c.status === 'รอตรวจสอบ').length,
+    approved: characters.filter(c => c.status === 'อนุมัติแล้ว').length,
+    rejected: characters.filter(c => c.status === 'ไม่ผ่าน').length,
+    withdrawn: characters.filter(c => c.status === 'ถอนตัว').length,
+  };
+
+  // Filtered character list for display
+  const filteredCharacters = characters.filter(
+    (character) =>
+      (selectedStatus === 'ทั้งหมด' || character.status === selectedStatus) &&
+      (
+        character.character_name?.toLowerCase().includes(search.toLowerCase()) ||
+        character.player_name?.toLowerCase().includes(search.toLowerCase()) ||
+        character.username?.toLowerCase().includes(search.toLowerCase())
+      )
+  );
 
   return (
     
@@ -229,74 +250,34 @@ Dashboard
 <div className="bg-[#fcfaf6] rounded-3xl p-5 border border-[#ddd0bb] shadow-sm">
   <p>Characters</p>
   <h2 className="text-3xl font-bold mt-1">
-  {characters.length}
+    {characters.length}
 </h2>
 </div>
 <div className="bg-[#fcfaf6] rounded-3xl p-5 border border-[#ddd0bb] shadow-sm">
   <p>รอตรวจสอบ</p>
   <h2 className="text-4xl font-bold mt-2">
-
-{
-
-  characters.filter(
-
-    c => c.status === "รอตรวจสอบ"
-
-  ).length
-
-}
-
+    {statusCounts.pending}
 </h2>
 </div>
 
 <div className="bg-[#fcfaf6] rounded-3xl p-5 border border-[#ddd0bb] shadow-sm">
   <p>อนุมัติแล้ว</p>
   <h2 className="text-4xl font-bold mt-2">
-
-{
-
-  characters.filter(
-
-    c => c.status === "อนุมัติแล้ว"
-
-  ).length
-
-}
-
+    {statusCounts.approved}
 </h2>
 </div>
 
 <div className="bg-[#fcfaf6] rounded-3xl p-5 border border-[#ddd0bb] shadow-sm">
   <p>ไม่ผ่าน</p>
   <h2 className="text-4xl font-bold mt-2">
-
-{
-
-  characters.filter(
-
-    c => c.status === "ไม่ผ่าน"
-
-  ).length
-
-}
-
+    {statusCounts.rejected}
 </h2>
 </div>
 
 <div className="bg-[#fcfaf6] rounded-3xl p-5 border border-[#ddd0bb] shadow-sm">
   <p>ถอนตัว</p>
   <h2 className="text-4xl font-bold mt-2">
-
-{
-
-  characters.filter(
-
-    c => c.status === "ถอนตัว"
-
-  ).length
-
-}
-
+    {statusCounts.withdrawn}
 </h2>
 </div>
 
@@ -368,27 +349,7 @@ selectedStatus === status
 <div className="grid xl:grid-cols-[260px_1fr] gap-5">
 
 <div className="space-y-3">
-{characters
-  .filter(
-    (character) =>
-      (selectedStatus === "ทั้งหมด" ||
-        character.status === selectedStatus) &&
-
-      (
-        character.character_name
-          ?.toLowerCase()
-          .includes(search.toLowerCase()) ||
-
-        character.player_name
-          ?.toLowerCase()
-          .includes(search.toLowerCase()) ||
-
-        character.username
-          ?.toLowerCase()
-          .includes(search.toLowerCase())
-      )
-  )
-  .map((character) => (
+{filteredCharacters.map((character) => (
     <div
       key={character.id}
       onClick={() => {
@@ -466,6 +427,7 @@ rounded-xl
 
   {/* รายละเอียด */}
 
+   {/* Character Detail Panel */}
    <div className="w-full min-w-0 border border-[#e3d6bf] rounded-3xl p-8 bg-[#fdfbf7] overflow-hidden">
   {selectedCharacter ? (
     <>
