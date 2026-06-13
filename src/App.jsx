@@ -431,28 +431,28 @@ rounded-xl
    <div className="w-full min-w-0 border border-[#e3d6bf] rounded-3xl p-8 bg-[#fdfbf7] overflow-hidden">
   {selectedCharacter ? (
     <>
-    <div>
-   <div className="grid lg:grid-cols-[180px_1fr] gap-8 items-start">
+   <div>
+   <div className="grid grid-cols-1 lg:grid-cols-[180px_1fr] gap-8 items-start">
 
 {selectedCharacter.avatar_url && selectedCharacter.avatar_url.trim() !== "" ? (
   <img
     src={selectedCharacter.avatar_url}
     alt={selectedCharacter.character_name}
     referrerPolicy="no-referrer"
-    className="w-[180px] h-[250px] object-cover rounded-3xl shadow-sm border border-[#e3d6bf] mx-auto lg:mx-0"
+    className="w-[180px] aspect-square object-cover rounded-3xl shadow-sm border border-[#e3d6bf] mx-auto lg:mx-0"
   />
 ) : (
-  <div className="w-56 h-72 bg-stone-200 rounded-2xl flex items-center justify-center">
+  <div className="w-[180px] aspect-square bg-stone-200 rounded-3xl flex items-center justify-center mx-auto lg:mx-0">
     ไม่มีรูป
   </div>
 )}
 
 <div className="flex-1 pt-2">
 
-<div className="flex items-start justify-between w-full mb-5">
+<div className="flex items-start justify-between w-full mb-3">
   <div className="flex-1 min-w-0">
-    <div className="flex items-center gap-2 mb-3">
-      <h1 className="text-3xl font-bold text-[#5b4534] leading-none">
+    <div className="flex items-center gap-2 mb-1">
+      <h1 className="text-[20px] font-bold text-[#5b4534] leading-none whitespace-nowrap">
         {selectedCharacter.character_name}
       </h1>
       <span className="px-3 py-1 rounded-xl bg-[#eef1e3] text-[#5f7044] text-xs font-medium whitespace-nowrap">
@@ -463,62 +463,63 @@ rounded-xl
       {selectedCharacter.role}
     </p>
   </div>
-  <button className="ml-auto border border-[#e3d6bf] rounded-xl px-5 py-2 bg-white hover:bg-stone-50 text-sm">
+  <button className="ml-auto border border-[#e3d6bf] rounded-xl px-5 py-2 bg-white hover:bg-stone-50 text-sm shrink-0">
     ✎ แก้ไขข้อมูล
   </button>
 </div>
 
-  <div className="flex items-center justify-between mt-6">
-    <div className="flex items-start gap-10 border-l border-r border-[#e8dfd0] px-5 py-1">
-      <div className="min-w-[70px]">
+  <div className="flex flex-col xl:flex-row xl:items-center justify-between mt-4 gap-6">
+    <div className="flex items-start gap-8 border-l border-r border-[#e8dfd0] px-5 py-1 flex-1">
+      <div className="min-w-[120px]">
         <p className="text-[11px] text-stone-400 mb-1">ผู้เล่น</p>
         <p className="font-medium text-[#4b3a2a]">{selectedCharacter.player_name}</p>
+
+        <p className="text-[11px] text-stone-400 mt-3 mb-1">
+          เข้าร่วมเมื่อ
+        </p>
+        <p className="text-sm text-[#4b3a2a]">
+          10 พ.ค. 2025
+        </p>
       </div>
-      <div className="min-w-[70px]">
+      <div className="min-w-[50px]">
         <p className="text-[11px] text-stone-400 mb-1">ตำแหน่ง</p>
         <p className="font-medium text-[#4b3a2a]">{selectedCharacter.position}</p>
       </div>
-      <div className="min-w-[70px]">
+      <div className="min-w-[50px]">
         <p className="text-[11px] text-stone-400 mb-1">ตำหนัก</p>
         <p className="font-medium text-[#4b3a2a]">{selectedCharacter.palace}</p>
       </div>
     </div>
 
-<div className="border border-[#e3d6bf] rounded-2xl overflow-hidden bg-[#fdfbf7] w-[220px] shadow-sm">
-  <div className="flex justify-between items-center px-5 py-3">
-    <span className="text-sm text-stone-500">RP</span>
-    <span className="text-2xl font-bold text-[#4b3a2a]">{selectedCharacter.rp}</span>
+<div className="border border-[#e3d6bf] rounded-2xl overflow-hidden bg-[#fdfbf7] w-[180px] shadow-sm shrink-0">
+  <div className="flex justify-between items-center px-4 py-2.5">
+    <span className="text-sm text-stone-400">RP</span>
+    <span className="text-lg font-bold text-[#4b3a2a]">{selectedCharacter.rp}</span>
   </div>
   <div className="h-px bg-[#e8dfd0]" />
-  <div className="flex justify-between items-center px-5 py-3">
-    <span className="text-sm text-stone-500">โปรดปราน</span>
-    <span className="text-2xl font-bold text-[#4b3a2a]">{selectedCharacter.favor}</span>
+  <div className="flex justify-between items-center px-4 py-2.5">
+    <span className="text-sm text-stone-400">โปรดปราน</span>
+    <span className="text-lg font-bold text-[#4b3a2a]">{selectedCharacter.favor}</span>
   </div>
 </div>
 
 </div>
 
-  <div className="mt-8">
-    <p className="text-xs uppercase tracking-wider text-stone-400">
-      เข้าร่วมเมื่อ
-    </p>
-    <p className="mt-1">10 พ.ค. 2025</p>
-  </div>
 
 </div>
 
 </div>
 </div>
       
-<div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
+<div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-5 max-w-[530px]">
 
 <button
   onClick={() => setShowRpModal(true)}
   className="
     bg-[#eef1e3] text-[#4f6b35] hover:bg-[#dfe5ce] transition-colors
-    rounded-2xl
-    py-4
-    text-lg
+    rounded-1xl
+    py-3
+    text-base
     font-semibold
     shadow-sm
   "
@@ -531,8 +532,8 @@ rounded-xl
   className="
     bg-[#fff0ee] text-[#cc5c4f] hover:bg-[#ffe2dd] transition-colors
     rounded-2xl
-    py-4
-    text-lg
+    py-3
+    text-base
     font-semibold
     shadow-sm
   "
@@ -544,8 +545,8 @@ rounded-xl
   className="
     bg-[#f1f2fb] text-[#5566a5] hover:bg-[#e4e8ff] transition-colors
     rounded-2xl
-    py-4
-    text-lg
+    py-3
+    text-base
     font-semibold
     shadow-sm
   "
