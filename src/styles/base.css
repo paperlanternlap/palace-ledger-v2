@@ -1,0 +1,102 @@
+:root {
+  font-family: "Noto Sans Thai", "Leelawadee UI", system-ui, sans-serif;
+  color: #40352c;
+  background: #f3efe7;
+  font-synthesis: none;
+  --paper: #fffdf8;
+  --paper-warm: #f8f4eb;
+  --ink: #40352c;
+  --muted: #81766b;
+  --line: #e7ded0;
+  --red: #7b2f2f;
+  --red-dark: #612222;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  min-width: 320px;
+  min-height: 100vh;
+  margin: 0;
+  background:
+    radial-gradient(circle at 90% 0%, rgb(123 47 47 / 6%), transparent 30rem),
+    #f3efe7;
+}
+
+button,
+input,
+textarea {
+  font: inherit;
+}
+
+button {
+  color: inherit;
+}
+
+button:disabled {
+  cursor: not-allowed;
+}
+
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible {
+  outline: 3px solid rgb(123 47 47 / 18%);
+  outline-offset: 2px;
+}
+
+.eyebrow {
+  display: block;
+  margin-bottom: 3px;
+  color: var(--red);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+}
+
+.primary-button,
+.secondary-button {
+  min-height: 34px;
+  padding: 0 13px;
+  border: 1px solid transparent;
+  border-radius: 9px;
+  font-size: 13px;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.primary-button {
+  color: white;
+  background: var(--red);
+}
+
+.primary-button:not(:disabled):hover {
+  background: var(--red-dark);
+}
+
+.secondary-button {
+  border-color: var(--line);
+  background: white;
+}
+
+.primary-button:disabled,
+.secondary-button:disabled {
+  opacity: 0.48;
+}
+
+.muted {
+  margin: 18px 0;
+  color: var(--muted);
+  font-size: 12px;
+  text-align: center;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

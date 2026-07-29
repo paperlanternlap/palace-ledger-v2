@@ -1,0 +1,203 @@
+.app-shell {
+  height: 100vh;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 228px minmax(0, 1fr);
+  overflow: hidden;
+}
+
+.sidebar {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  padding: 28px 18px 20px;
+  color: #f8f1e6;
+  background: linear-gradient(#411919f5, #301414fa);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 8px 26px;
+}
+
+.brand-mark {
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgb(239 215 174 / 42%);
+  color: #eedab5;
+  font: 21px serif;
+}
+
+.brand h1 {
+  margin: 0;
+  font: 700 21px "Noto Serif Thai", serif;
+}
+
+.brand p {
+  margin: 2px 0 0;
+  color: rgb(248 241 230 / 50%);
+  font-size: 9px;
+  letter-spacing: 0.18em;
+}
+
+.nav-list {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.nav-item {
+  width: 100%;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 9px;
+  color: rgb(248 241 230 / 66%);
+  background: transparent;
+  text-align: left;
+}
+
+.nav-item.active {
+  color: #fffaf1;
+  background: rgb(255 255 255 / 10%);
+  box-shadow: inset 3px 0 #d5b77f;
+}
+
+.nav-item:disabled {
+  opacity: 0.58;
+}
+
+.nav-item small {
+  margin-left: auto;
+  padding: 2px 6px;
+  border-radius: 99px;
+  background: rgb(255 255 255 / 8%);
+  font-size: 9px;
+}
+
+.sidebar-foot {
+  margin-top: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 10px 0;
+  color: rgb(248 241 230 / 43%);
+  border-top: 1px solid rgb(255 255 255 / 9%);
+  font-size: 12px;
+}
+
+.main-content {
+  min-width: 0;
+  min-height: 0;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 8px clamp(14px, 2vw, 28px);
+}
+
+.page-header {
+  flex: none;
+  width: 100%;
+  min-height: 42px;
+  max-width: 1440px;
+  margin: 0 auto 6px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 0 4px;
+}
+
+.page-header h1 {
+  margin: 0;
+  font: 700 19px "Noto Serif Thai", serif;
+}
+
+.workspace {
+  min-height: 0;
+  flex: 1;
+  max-width: 1440px;
+  width: 100%;
+  height: auto;
+  margin: auto;
+  display: grid;
+  grid-template-columns: 330px minmax(0, 1fr);
+  gap: 16px;
+}
+
+.directory-panel,
+.detail-card {
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--paper);
+  box-shadow: 0 12px 32px rgb(68 51 37 / 6%);
+}
+
+@media (max-width: 820px) {
+  .app-shell {
+    height: auto;
+    min-height: 100vh;
+    grid-template-columns: 1fr;
+    overflow: visible;
+  }
+
+  .sidebar {
+    position: static;
+    height: auto;
+    padding: 14px 16px 10px;
+  }
+
+  .brand {
+    padding-bottom: 12px;
+  }
+
+  .nav-list {
+    flex-direction: row;
+    overflow-x: auto;
+  }
+
+  .nav-item {
+    width: auto;
+    flex: none;
+  }
+
+  .nav-item small,
+  .sidebar-foot {
+    display: none;
+  }
+
+  .main-content {
+    height: auto;
+    min-height: 0;
+    overflow: visible;
+    padding: 8px;
+  }
+
+  .workspace {
+    height: auto;
+    min-height: 600px;
+    grid-template-columns: 1fr;
+  }
+
+  .directory-panel {
+    height: auto;
+    max-height: 480px;
+  }
+
+  .detail-card {
+    height: auto;
+  }
+}
