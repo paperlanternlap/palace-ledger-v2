@@ -133,6 +133,28 @@
   gap: 16px;
 }
 
+@media (min-width: 1600px) {
+  .page-header h1 {
+    font-size: 21px !important;
+  }
+
+  .page-header .primary-button {
+    font-size: 13px !important;
+  }
+
+  .nav-item {
+    font-size: 14px;
+  }
+
+  .nav-item small {
+    font-size: 10px;
+  }
+
+  .sidebar-foot {
+    font-size: 13px;
+  }
+}
+
 .directory-panel,
 .detail-card {
   height: 100%;

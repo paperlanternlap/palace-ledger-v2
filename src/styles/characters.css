@@ -458,6 +458,83 @@
   text-align: center;
 }
 
+@media (min-width: 1600px) {
+  .directory-head h2 {
+    font-size: 17px;
+  }
+
+  .directory-head span,
+  .section-heading > span {
+    font-size: 12px;
+  }
+
+  .search-box input {
+    font-size: 14px;
+  }
+
+  .status-filters button {
+    font-size: 12px;
+  }
+
+  .character-summary strong {
+    font-size: 15px;
+  }
+
+  .character-summary span {
+    font-size: 12px;
+  }
+
+  .profile-title h2 {
+    font-size: 29px;
+  }
+
+  .profile-title p {
+    font-size: 13px;
+  }
+
+  .profile-meta span {
+    font-size: 12px;
+  }
+
+  .profile-meta strong {
+    font-size: 13px;
+  }
+
+  .score-summary span {
+    font-size: 11px !important;
+  }
+
+  .score-summary strong {
+    font-size: 19px !important;
+  }
+
+  .quick-actions span {
+    font-size: 15px;
+  }
+
+  .quick-actions small {
+    font-size: 12px;
+  }
+
+  .section-heading h3 {
+    font-size: 16px;
+  }
+
+  .inventory-row,
+  .history-row {
+    font-size: 14px;
+  }
+
+  .history-row p {
+    font-size: 12px;
+  }
+
+  .history-row time,
+  .pagination span {
+    font-size: 11px;
+  }
+}
+
 @media (max-width: 1100px) {
   .workspace {
     height: auto;
