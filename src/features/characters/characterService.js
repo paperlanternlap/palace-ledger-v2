@@ -41,3 +41,25 @@ export async function updateScore({
 export async function addHistory(entry) {
   return supabase.from("character_history").insert(entry);
 }
+
+export function getGrantableItems() {
+  return supabase
+    .from("items")
+    .select("id, name, description, is_limited, stock_quantity, active")
+    .eq("active", true)
+    .order("name", { ascending: true });
+}
+
+export function grantItemToCharacter({
+  itemId,
+  characterId,
+  quantity,
+  note,
+}) {
+  return supabase.rpc("grant_catalog_item", {
+    p_item_id: itemId,
+    p_character_id: characterId,
+    p_quantity: quantity,
+    p_note: note || null,
+  });
+}

@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Sidebar } from "./components/layout/Sidebar";
+import { StaffGate } from "./features/auth/StaffGate";
 import { AdjustmentModal } from "./features/characters/AdjustmentModal";
 import { CharacterDetail } from "./features/characters/CharacterDetail";
 import { CharacterDirectory } from "./features/characters/CharacterDirectory";
+import { GrantItemModal } from "./features/characters/GrantItemModal";
 import {
   addHistory,
   getCharacterDetails,
@@ -13,8 +15,13 @@ import {
   filterCharacters,
   formatNumber,
 } from "./features/characters/utils";
+import { InventoryManager } from "./features/inventory/InventoryManager";
+import { ItemRequestQueue } from "./features/item-requests/ItemRequestQueue";
+import { FollowerManager } from "./features/followers/FollowerManager";
+import { RpQueue } from "./features/rp-queue/RpQueue";
 
-function App() {
+function StaffApp() {
+  const [activePage, setActivePage] = useState("characters");
   const [characters, setCharacters] = useState([]);
   const [selectedCharacter, setSelectedCharacter] = useState(null);
   const [inventory, setInventory] = useState([]);
@@ -24,6 +31,7 @@ function App() {
   const [loading, setLoading] = useState(true);
   const [detailLoading, setDetailLoading] = useState(false);
   const [adjustmentType, setAdjustmentType] = useState(null);
+  const [showGrantItem, setShowGrantItem] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [notice, setNotice] = useState(null);
 
@@ -122,39 +130,62 @@ function App() {
 
   return (
     <div className="app-shell h-screen min-h-0 overflow-hidden">
-      <Sidebar />
+      <Sidebar activePage={activePage} onNavigate={setActivePage} />
 
       <main className="main-content flex h-screen min-h-0 flex-col overflow-hidden">
         <header className="page-header flex h-9 shrink-0 items-center justify-between">
-          <h1 className="!text-lg !leading-none">จัดการตัวละคร</h1>
-          <button
-            type="button"
-            className="primary-button !min-h-8 !px-3 !text-xs"
-            disabled
-          >
-            + เพิ่มตัวละคร
-          </button>
+          <h1 className="!text-lg !leading-none">
+            {activePage === "characters"
+              ? "จัดการตัวละคร"
+              : activePage === "rp-queue"
+                ? "คิวตรวจโรล"
+                : activePage === "item-requests"
+                  ? "คำร้องและงานแม่งาน"
+                  : activePage === "followers"
+                    ? "จัดการผู้ติดตาม"
+                    : "คลังไอเท็ม"}
+          </h1>
+          {activePage === "characters" && (
+            <button
+              type="button"
+              className="primary-button !min-h-8 !px-3 !text-xs"
+              disabled
+            >
+              + เพิ่มตัวละคร
+            </button>
+          )}
         </header>
 
-        <section className="workspace min-h-0 flex-1">
-          <CharacterDirectory
-            characters={filteredCharacters}
-            selectedId={selectedCharacter?.id}
-            selectedStatus={selectedStatus}
-            search={search}
-            loading={loading}
-            onSelect={selectCharacter}
-            onStatusChange={setSelectedStatus}
-            onSearchChange={setSearch}
-          />
-          <CharacterDetail
-            character={selectedCharacter}
-            inventory={inventory}
-            history={history}
-            loading={detailLoading}
-            onAdjust={setAdjustmentType}
-          />
-        </section>
+        {activePage === "characters" ? (
+          <section className="workspace min-h-0 flex-1">
+            <CharacterDirectory
+              characters={filteredCharacters}
+              selectedId={selectedCharacter?.id}
+              selectedStatus={selectedStatus}
+              search={search}
+              loading={loading}
+              onSelect={selectCharacter}
+              onStatusChange={setSelectedStatus}
+              onSearchChange={setSearch}
+            />
+            <CharacterDetail
+              character={selectedCharacter}
+              inventory={inventory}
+              history={history}
+              loading={detailLoading}
+              onAdjust={setAdjustmentType}
+              onGrantItem={() => setShowGrantItem(true)}
+            />
+          </section>
+        ) : activePage === "rp-queue" ? (
+          <RpQueue />
+        ) : activePage === "item-requests" ? (
+          <ItemRequestQueue />
+        ) : activePage === "followers" ? (
+          <FollowerManager />
+        ) : (
+          <InventoryManager />
+        )}
       </main>
 
       {adjustmentType && selectedCharacter && (
@@ -167,12 +198,43 @@ function App() {
         />
       )}
 
+      {showGrantItem && selectedCharacter && (
+        <GrantItemModal
+          character={selectedCharacter}
+          onClose={() => setShowGrantItem(false)}
+          onSaved={async ({ itemName, quantity, note }) => {
+            setShowGrantItem(false);
+            const historyResult = await addHistory({
+              character_id: selectedCharacter.id,
+              action: `เพิ่มไอเท็ม · ${note}`,
+              value: `+${formatNumber(quantity)} ${itemName}`,
+              type: "item",
+            });
+            setNotice({
+              type: historyResult.error ? "warning" : "success",
+              message: historyResult.error
+                ? "เพิ่มไอเท็มแล้ว แต่บันทึกประวัติไม่สำเร็จ"
+                : `เพิ่ม ${itemName} ให้ ${selectedCharacter.character_name} แล้ว`,
+            });
+            await selectCharacter(selectedCharacter);
+          }}
+        />
+      )}
+
       {notice && (
         <div className={`toast ${notice.type}`} role="status">
           {notice.message}
         </div>
       )}
     </div>
+  );
+}
+
+function App() {
+  return (
+    <StaffGate>
+      <StaffApp />
+    </StaffGate>
   );
 }
 

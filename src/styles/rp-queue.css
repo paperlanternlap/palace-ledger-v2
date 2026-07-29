@@ -1,0 +1,510 @@
+.queue-workspace {
+  min-height: 0;
+  flex: 1;
+  display: grid;
+  grid-template-columns: clamp(300px, 24vw, 380px) minmax(0, 1fr);
+  gap: 16px;
+}
+
+.queue-directory,
+.review-panel,
+.queue-setup {
+  min-height: 0;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--paper);
+  box-shadow: 0 12px 32px rgb(68 51 37 / 6%);
+}
+
+.queue-directory {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.queue-tools {
+  padding: 18px;
+  border-bottom: 1px solid var(--line);
+}
+
+.queue-tools > div:first-child {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.queue-tools > div:first-child > div {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.add-submission-button {
+  min-height: 30px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0 9px;
+  border: 1px solid #d8c2ad;
+  border-radius: 8px;
+  color: var(--red);
+  background: #fffaf4;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.add-submission-button:hover {
+  border-color: var(--red);
+  box-shadow: 0 5px 12px rgb(68 38 29 / 9%);
+}
+
+.queue-tools h2 {
+  margin: 0;
+  font-size: 16px;
+}
+
+.queue-tools span {
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.queue-filters {
+  display: flex;
+  gap: 6px;
+  margin-top: 10px;
+  overflow-x: auto;
+}
+
+.queue-filters button {
+  flex: none;
+  padding: 5px 9px;
+  border: 1px solid var(--line);
+  border-radius: 99px;
+  color: var(--muted);
+  background: white;
+  font-size: 11px;
+}
+
+.queue-filters button.selected {
+  color: white;
+  border-color: var(--red);
+  background: var(--red);
+}
+
+.submission-list {
+  min-height: 0;
+  flex: 1;
+  padding: 8px;
+  overflow-y: auto;
+}
+
+.submission-row {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 11px;
+  padding: 10px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  background: transparent;
+  text-align: left;
+}
+
+.submission-row:hover,
+.submission-row.selected {
+  background: #f3ecdf;
+}
+
+.submission-row.selected {
+  border-color: #ded1bd;
+}
+
+.submission-row img,
+.submission-avatar {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  object-fit: cover;
+  background: #e8dfd1;
+}
+
+.submission-avatar {
+  display: grid;
+  place-items: center;
+  font-family: serif;
+}
+
+.submission-row > span {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.submission-row strong,
+.submission-row small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.submission-row strong {
+  font-size: 13px;
+}
+
+.submission-row small,
+.submission-row time {
+  color: var(--muted);
+  font-size: 10px;
+}
+
+.review-panel {
+  padding: clamp(20px, 2.5vw, 34px);
+  overflow-y: auto;
+}
+
+.review-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid var(--line);
+}
+
+.review-header h2 {
+  margin: 7px 0 0;
+  font: 700 25px "Noto Serif Thai", serif;
+}
+
+.review-header p {
+  margin: 3px 0 0;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.queue-status {
+  display: inline-flex;
+  padding: 3px 8px;
+  border-radius: 99px;
+  font-size: 10px;
+}
+
+.queue-status.pending { color: #96621c; background: #fff4d9; }
+.queue-status.revision { color: #7b5a32; background: #f4eadb; }
+.queue-status.approved { color: #3f6c4c; background: #e6f3e8; }
+.queue-status.rejected { color: #914b4b; background: #f8e5e5; }
+
+.open-role-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 11px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  color: var(--red);
+  background: white;
+  font-size: 12px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.submission-info {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.submission-info > div,
+.player-note {
+  padding: 11px 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #fbf8f2;
+}
+
+.submission-info span,
+.player-note span {
+  display: block;
+  margin-bottom: 3px;
+  color: var(--muted);
+  font-size: 10px;
+}
+
+.submission-info strong {
+  font-size: 12px;
+}
+
+.submission-info .role-link {
+  grid-column: 1 / -1;
+}
+
+.role-link strong {
+  display: block;
+  overflow: hidden;
+  color: var(--red);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.player-note {
+  margin-top: 10px;
+}
+
+.player-note p {
+  margin: 0;
+  font-size: 12px;
+}
+
+.review-form {
+  margin-top: 18px;
+}
+
+.reward-fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.review-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 12px;
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.review-form input,
+.review-form textarea {
+  width: 100%;
+  padding: 10px 11px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  color: var(--ink);
+  background: white;
+}
+
+.review-error {
+  margin: 0 0 10px;
+  color: #9a3e3e;
+  font-size: 11px;
+}
+
+.review-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.review-actions button {
+  min-height: 38px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 13px;
+  border: 1px solid;
+  border-radius: 9px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.review-reject { color: #944646; border-color: #ebcccc; background: #fff6f5; }
+.review-revision { color: #826232; border-color: #e5d4b9; background: #fffaf0; }
+.review-approve { color: white; border-color: #60734c; background: #60734c; }
+
+.queue-empty,
+.queue-setup {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted);
+  text-align: center;
+}
+
+.queue-empty {
+  min-height: 220px;
+  gap: 5px;
+  font-size: 12px;
+}
+
+.queue-empty strong {
+  color: var(--ink);
+}
+
+.queue-message {
+  margin: 30px;
+  color: var(--muted);
+  font-size: 12px;
+  text-align: center;
+}
+
+.queue-setup {
+  flex: 1;
+  padding: 30px;
+}
+
+.setup-icon {
+  width: 58px;
+  height: 58px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  color: #976632;
+  background: #fff0d8;
+}
+
+.queue-setup h2 {
+  margin: 14px 0 5px;
+  color: var(--ink);
+  font-size: 18px;
+}
+
+.queue-setup p {
+  max-width: 520px;
+  margin: 0;
+  font-size: 12px;
+}
+
+.queue-setup code {
+  margin-top: 14px;
+  padding: 7px 10px;
+  border-radius: 7px;
+  color: var(--red);
+  background: #f5eee4;
+  font-size: 11px;
+}
+
+.submission-modal {
+  position: relative;
+  width: min(560px, 100%);
+  max-height: calc(100vh - 36px);
+  padding: 27px;
+  overflow-y: auto;
+  border-radius: 16px;
+  background: var(--paper);
+  box-shadow: 0 26px 70px rgb(39 25 18 / 24%);
+}
+
+.submission-modal-icon {
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  margin-bottom: 10px;
+  border-radius: 10px;
+  color: var(--red);
+  background: #f5e8e1;
+}
+
+.submission-modal h2 {
+  margin: 0;
+  font: 700 22px "Noto Serif Thai", serif;
+}
+
+.submission-modal > p {
+  margin: 4px 0 18px;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.submission-modal form,
+.submission-modal label {
+  display: flex;
+  flex-direction: column;
+}
+
+.submission-modal form {
+  gap: 12px;
+}
+
+.submission-modal label {
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.submission-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.submission-modal input,
+.submission-modal select,
+.submission-modal textarea {
+  width: 100%;
+  min-height: 41px;
+  padding: 9px 11px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  color: var(--ink);
+  background: white;
+}
+
+.submission-modal textarea {
+  resize: vertical;
+}
+
+@media (min-width: 1600px) {
+  .queue-tools h2 { font-size: 17px; }
+  .queue-tools span,
+  .queue-filters button { font-size: 12px; }
+  .submission-row strong { font-size: 15px; }
+  .submission-row small,
+  .submission-row time { font-size: 12px; }
+  .review-header h2 { font-size: 29px; }
+  .review-header p,
+  .open-role-button,
+  .submission-info strong,
+  .player-note p,
+  .review-form label,
+  .review-actions button { font-size: 14px; }
+  .submission-info span,
+  .player-note span,
+  .queue-status,
+  .review-error { font-size: 12px; }
+  .add-submission-button { font-size: 12px; }
+  .submission-modal > p,
+  .submission-modal label { font-size: 14px; }
+}
+
+@media (max-width: 820px) {
+  .queue-workspace {
+    grid-template-columns: 1fr;
+    overflow: visible;
+  }
+
+  .queue-directory {
+    max-height: 480px;
+  }
+
+  .review-panel {
+    min-height: 560px;
+  }
+}
+
+@media (max-width: 560px) {
+  .review-header,
+  .review-actions {
+    flex-direction: column;
+  }
+
+  .reward-fields,
+  .submission-info,
+  .submission-form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .submission-info .role-link {
+    grid-column: auto;
+  }
+
+  .review-actions button {
+    width: 100%;
+    justify-content: center;
+  }
+}

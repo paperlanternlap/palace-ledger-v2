@@ -64,6 +64,26 @@
   color: rgb(248 241 230 / 66%);
   background: transparent;
   text-align: left;
+  cursor: pointer;
+  transition:
+    color 150ms ease,
+    background-color 150ms ease,
+    box-shadow 150ms ease,
+    transform 150ms ease;
+}
+
+.nav-item:not(:disabled):hover {
+  color: #fffaf1;
+  background: rgb(255 255 255 / 13%);
+  box-shadow:
+    0 7px 16px rgb(20 6 6 / 18%),
+    inset 0 0 0 1px rgb(255 255 255 / 5%);
+  transform: translateY(-1px);
+}
+
+.nav-item:not(:disabled):active {
+  box-shadow: 0 2px 7px rgb(20 6 6 / 18%);
+  transform: translateY(0);
 }
 
 .nav-item.active {
@@ -72,8 +92,15 @@
   box-shadow: inset 3px 0 #d5b77f;
 }
 
+.nav-item.active:not(:disabled):hover {
+  box-shadow:
+    0 7px 16px rgb(20 6 6 / 18%),
+    inset 3px 0 #d5b77f;
+}
+
 .nav-item:disabled {
   opacity: 0.58;
+  cursor: not-allowed;
 }
 
 .nav-item small {

@@ -1,0 +1,691 @@
+.follower-page {
+  min-height: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+.follower-overview {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.follower-overview button {
+  min-height: 55px;
+  display: grid;
+  grid-template-columns: 22px 1fr auto;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  color: #6a594b;
+  background: var(--paper);
+  text-align: left;
+}
+
+.follower-overview button:hover {
+  border-color: #d4c1a8;
+  background: #fffaf1;
+  box-shadow: 0 6px 15px rgb(68 51 37 / 6%);
+}
+
+.follower-overview button.active {
+  color: var(--red);
+  border-color: #d8b9a6;
+  background: #fff8ed;
+  box-shadow: inset 0 -2px var(--red);
+}
+
+.follower-overview span {
+  font-size: 10px;
+}
+
+.follower-overview strong {
+  font: 700 19px "Noto Serif Thai", serif;
+}
+
+.follower-insights {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.follower-insights > div {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  padding: 7px 10px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: rgb(255 253 248 / 72%);
+}
+
+.follower-insight-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--red);
+  font-size: 10px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.follower-insights > div > div {
+  min-width: 0;
+  display: flex;
+  gap: 5px;
+  overflow-x: auto;
+}
+
+.follower-insights > div > div > span {
+  flex: none;
+  padding: 3px 7px;
+  border-radius: 99px;
+  color: #65564a;
+  background: #eee6da;
+  font-size: 9px;
+}
+
+.follower-insights > div > div > span strong {
+  margin-left: 3px;
+  color: var(--red);
+}
+
+.follower-insights small {
+  color: var(--muted);
+  font-size: 9px;
+  white-space: nowrap;
+}
+
+.follower-section-tabs {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.follower-section-tabs button {
+  padding: 5px 9px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  color: var(--muted);
+  background: transparent;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.follower-section-tabs button.active {
+  color: var(--red);
+  border-color: var(--red);
+}
+
+.follower-section-tabs span {
+  color: var(--muted);
+  font-size: 9px;
+}
+
+.follower-workspace {
+  min-height: 0;
+  flex: 1;
+  display: grid;
+  grid-template-columns: clamp(330px, 27vw, 420px) minmax(0, 1fr);
+  gap: 16px;
+}
+
+.follower-directory,
+.follower-detail {
+  min-height: 0;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--paper);
+  box-shadow: 0 12px 32px rgb(68 51 37 / 6%);
+}
+
+.follower-directory {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.follower-tools {
+  padding: 16px;
+  border-bottom: 1px solid var(--line);
+}
+
+.follower-directory-title,
+.follower-directory-title > div {
+  display: flex;
+  align-items: baseline;
+}
+
+.follower-directory-title {
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 11px;
+}
+
+.follower-directory-title > div {
+  gap: 8px;
+}
+
+.follower-directory-title h2 {
+  margin: 0;
+  font-size: 16px;
+}
+
+.follower-directory-title span {
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.follower-directory-title button {
+  min-height: 30px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0 9px;
+  border: 1px solid #d8c2ad;
+  border-radius: 8px;
+  color: var(--red);
+  background: #fffaf4;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.follower-directory-title button:disabled {
+  opacity: 0.45;
+}
+
+.follower-list {
+  min-height: 0;
+  flex: 1;
+  padding: 8px;
+  overflow-y: auto;
+}
+
+.follower-row {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  border: 1px solid transparent;
+  border-radius: 11px;
+  background: transparent;
+  text-align: left;
+}
+
+.follower-row:hover,
+.follower-row.selected {
+  background: #f3ecdf;
+}
+
+.follower-row.selected {
+  border-color: #ded1bd;
+}
+
+.follower-row img,
+.follower-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+}
+
+.follower-row img {
+  object-fit: cover;
+}
+
+.follower-avatar {
+  display: grid;
+  place-items: center;
+  color: var(--red);
+  background: #eadfce;
+  font: 700 17px "Noto Serif Thai", serif;
+}
+
+.follower-row > span:nth-child(2) {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.follower-row strong,
+.follower-row small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.follower-row strong {
+  font-size: 13px;
+}
+
+.follower-row small {
+  color: var(--muted);
+  font-size: 10px;
+}
+
+.follower-status {
+  display: inline-flex;
+  width: fit-content;
+  padding: 3px 7px;
+  border-radius: 99px;
+  font-size: 9px;
+  white-space: nowrap;
+}
+
+.follower-status.available { color: #456f52; background: #e4f1e6; }
+.follower-status.assigned { color: #73562e; background: #f2e8d8; }
+.follower-status.on_mission { color: #34637c; background: #e3f0f5; }
+.follower-status.unavailable { color: #914b4b; background: #f8e5e5; }
+
+.follower-detail {
+  padding: clamp(18px, 2vw, 28px);
+  overflow-y: auto;
+}
+
+.follower-profile {
+  display: grid;
+  grid-template-columns: 78px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 14px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--line);
+}
+
+.follower-profile > img,
+.follower-profile-placeholder {
+  width: 78px;
+  height: 78px;
+  border: 3px solid white;
+  border-radius: 14px;
+  box-shadow: 0 0 0 1px var(--line);
+}
+
+.follower-profile > img {
+  object-fit: cover;
+}
+
+.follower-profile-placeholder {
+  display: grid;
+  place-items: center;
+  color: var(--red);
+  background: #eee3d3;
+  font: 700 27px "Noto Serif Thai", serif;
+}
+
+.follower-profile h2 {
+  margin: 6px 0 0;
+  font: 700 25px "Noto Serif Thai", serif;
+}
+
+.follower-profile p {
+  margin: 1px 0 0;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.follower-owner {
+  min-width: 150px;
+  display: flex;
+  flex-direction: column;
+  padding: 10px 12px;
+  border: 1px solid #dfd4bd;
+  border-radius: 10px;
+  background: #f8f2e5;
+}
+
+.follower-owner span,
+.follower-owner small {
+  color: var(--muted);
+  font-size: 9px;
+}
+
+.follower-owner strong {
+  font-size: 13px;
+}
+
+.follower-description {
+  margin: 12px 0 0;
+  padding: 11px 12px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: #fbf8f2;
+  font-size: 12px;
+}
+
+.follower-levels {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.follower-levels > div {
+  display: flex;
+  flex-direction: column;
+  padding: 9px 10px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: #fffdf9;
+}
+
+.follower-levels span {
+  color: var(--muted);
+  font-size: 9px;
+}
+
+.follower-levels strong {
+  font-size: 13px;
+}
+
+.follower-capabilities {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 9px;
+  margin-top: 9px;
+}
+
+.follower-tag-group,
+.follower-staff-note {
+  padding: 11px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: #fbf8f2;
+}
+
+.follower-tag-group > div:first-child,
+.follower-staff-note > div {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--red);
+}
+
+.follower-tag-group > div:first-child strong,
+.follower-staff-note strong {
+  color: var(--ink);
+  font-size: 12px;
+}
+
+.follower-tag-group > div:last-child {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 8px;
+}
+
+.follower-tag-group > div:last-child span {
+  padding: 3px 7px;
+  border-radius: 99px;
+  color: #675545;
+  background: #ede4d7;
+  font-size: 10px;
+}
+
+.follower-tag-group small {
+  color: var(--muted);
+  font-size: 10px;
+}
+
+.follower-staff-note {
+  margin-top: 9px;
+  border-color: #e2d2df;
+  background: #faf3f8;
+}
+
+.follower-staff-note p {
+  margin: 6px 0 0;
+  font-size: 11px;
+}
+
+.follower-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 12px;
+}
+
+.follower-actions button {
+  min-height: 36px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.release-follower-button {
+  padding: 0 12px;
+  border: 1px solid #e1c8c5;
+  border-radius: 9px;
+  color: #8b4642;
+  background: #fff7f5;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.follower-empty,
+.follower-setup {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted);
+  text-align: center;
+}
+
+.follower-empty {
+  min-height: 220px;
+  gap: 4px;
+  font-size: 11px;
+}
+
+.follower-empty strong,
+.follower-setup strong {
+  color: var(--ink);
+}
+
+.follower-message {
+  margin: 28px;
+  color: var(--muted);
+  font-size: 11px;
+  text-align: center;
+}
+
+.follower-setup {
+  flex: 1;
+  gap: 5px;
+  padding: 24px;
+  font-size: 11px;
+}
+
+.follower-setup code {
+  margin-top: 7px;
+  padding: 6px 8px;
+  border-radius: 6px;
+  color: var(--red);
+  background: #f4ede3;
+  font-size: 9px;
+}
+
+.follower-modal {
+  position: relative;
+  width: min(720px, 100%);
+  max-height: calc(100vh - 34px);
+  padding: 25px;
+  overflow-y: auto;
+  border-radius: 16px;
+  background: var(--paper);
+  box-shadow: 0 26px 70px rgb(39 25 18 / 24%);
+}
+
+.follower-modal-icon {
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  margin-bottom: 9px;
+  border-radius: 10px;
+  color: var(--red);
+  background: #f5e8e1;
+}
+
+.follower-modal h2 {
+  margin: 0;
+  font: 700 22px "Noto Serif Thai", serif;
+}
+
+.follower-modal > p {
+  margin: 3px 0 16px;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.follower-modal form,
+.follower-modal label {
+  display: flex;
+  flex-direction: column;
+}
+
+.follower-modal form {
+  gap: 10px;
+}
+
+.follower-modal label {
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 650;
+}
+
+.follower-modal input,
+.follower-modal select,
+.follower-modal textarea,
+.assign-follower-modal select {
+  width: 100%;
+  min-height: 39px;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  color: var(--ink);
+  background: white;
+  font: inherit;
+}
+
+.follower-modal textarea {
+  resize: vertical;
+}
+
+.follower-form-grid,
+.follower-level-grid {
+  display: grid;
+  gap: 9px;
+}
+
+.follower-form-grid {
+  grid-template-columns: 1fr 1fr;
+}
+
+.follower-level-grid {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.follower-modal label small {
+  color: var(--muted);
+  font-size: 9px;
+  font-weight: 400;
+}
+
+.follower-form-error {
+  margin: 0;
+  color: #994747;
+  font-size: 10px;
+}
+
+@media (min-width: 1600px) {
+  .follower-overview span,
+  .follower-insight-title,
+  .follower-section-tabs button { font-size: 12px; }
+  .follower-insights > div > div > span,
+  .follower-section-tabs span { font-size: 11px; }
+  .follower-directory-title h2 { font-size: 18px; }
+  .follower-directory-title span,
+  .follower-directory-title button,
+  .follower-row small,
+  .follower-profile p,
+  .follower-levels strong,
+  .follower-tag-group > div:last-child span { font-size: 13px; }
+  .follower-row strong { font-size: 15px; }
+  .follower-status,
+  .follower-owner span,
+  .follower-owner small,
+  .follower-levels span { font-size: 11px; }
+  .follower-profile h2 { font-size: 29px; }
+  .follower-modal > p,
+  .follower-modal label { font-size: 13px; }
+}
+
+@media (max-width: 920px) {
+  .follower-page {
+    overflow: visible;
+  }
+
+  .follower-overview {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .follower-insights {
+    grid-template-columns: 1fr;
+  }
+
+  .follower-workspace {
+    grid-template-columns: 1fr;
+    overflow: visible;
+  }
+
+  .follower-directory {
+    max-height: 520px;
+  }
+
+  .follower-detail {
+    min-height: 540px;
+  }
+}
+
+@media (max-width: 620px) {
+  .follower-profile {
+    grid-template-columns: 64px minmax(0, 1fr);
+  }
+
+  .follower-profile > img,
+  .follower-profile-placeholder {
+    width: 64px;
+    height: 64px;
+  }
+
+  .follower-owner {
+    grid-column: 1 / -1;
+  }
+
+  .follower-levels,
+  .follower-capabilities,
+  .follower-form-grid,
+  .follower-level-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 440px) {
+  .follower-overview {
+    grid-template-columns: 1fr;
+  }
+
+  .follower-levels,
+  .follower-capabilities,
+  .follower-form-grid,
+  .follower-level-grid {
+    grid-template-columns: 1fr;
+  }
+}

@@ -101,6 +101,7 @@ export function CharacterDetail({
   history,
   loading,
   onAdjust,
+  onGrantItem,
 }) {
   if (!character) {
     return (
@@ -173,9 +174,9 @@ export function CharacterDetail({
           <span>+ เพิ่มความโปรดปราน</span>
           <small>บันทึกรางวัล</small>
         </button>
-        <button type="button" disabled>
+        <button type="button" onClick={onGrantItem}>
           <span>+ เพิ่มไอเท็ม</span>
-          <small>กำลังพัฒนา</small>
+          <small>มอบของให้ตัวละคร</small>
         </button>
       </div>
 

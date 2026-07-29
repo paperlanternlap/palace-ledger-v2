@@ -1,4 +1,8 @@
 import { Search, X } from "lucide-react";
+import {
+  ListPagination,
+} from "../../components/ui/ListPagination";
+import { useListPagination } from "../../components/ui/useListPagination";
 import { CharacterList } from "./CharacterList";
 import { STATUS_OPTIONS } from "./constants";
 import { formatNumber } from "./utils";
@@ -13,6 +17,12 @@ export function CharacterDirectory({
   onStatusChange,
   onSearchChange,
 }) {
+  const characterPages = useListPagination(
+    characters,
+    6,
+    `${selectedStatus}|${search}`,
+  );
+
   return (
     <aside className="directory-panel">
       <div className="directory-head">
@@ -56,10 +66,16 @@ export function CharacterDirectory({
       </div>
 
       <CharacterList
-        characters={characters}
+        characters={characterPages.pageItems}
         selectedId={selectedId}
         onSelect={onSelect}
         loading={loading}
+      />
+      <ListPagination
+        currentPage={characterPages.currentPage}
+        totalPages={characterPages.totalPages}
+        onPageChange={characterPages.setPage}
+        label="หน้ารายชื่อตัวละคร"
       />
     </aside>
   );

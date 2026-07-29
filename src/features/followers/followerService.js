@@ -1,0 +1,85 @@
+import { supabase } from "../../supabase";
+
+export async function getFollowers() {
+  const [followers, characters] = await Promise.all([
+    supabase
+      .from("follower_master")
+      .select("*")
+      .order("name", { ascending: true }),
+    supabase
+      .from("characters")
+      .select("id, character_name, player_name, avatar_url"),
+  ]);
+
+  if (followers.error) return followers;
+  if (characters.error) return characters;
+
+  const characterMap = new Map(
+    (characters.data || []).map((character) => [
+      String(character.id),
+      character,
+    ]),
+  );
+
+  return {
+    data: (followers.data || []).map((follower) => {
+      const owner = follower.owner_character_id
+        ? characterMap.get(String(follower.owner_character_id)) || null
+        : null;
+      const viewStatus = !follower.active
+        ? "unavailable"
+        : follower.status && follower.status !== "idle"
+          ? "on_mission"
+          : owner
+            ? "assigned"
+            : "available";
+      return {
+        ...follower,
+        owner,
+        view_status: viewStatus,
+      };
+    }),
+    error: null,
+  };
+}
+
+export function createFollower(values) {
+  return supabase
+    .from("follower_master")
+    .insert({
+      name: values.name,
+      description: values.description || null,
+      cost: values.cost,
+      active: true,
+      owner_character_id: null,
+      skill_type: values.skillType || null,
+      skill_value: values.skillValue,
+      status: "idle",
+      avatar_url: values.avatarUrl || null,
+      follower_type: values.followerType,
+      access_areas: values.accessAreas,
+      weekly_mission_limit: values.weeklyMissionLimit,
+    })
+    .select("id")
+    .single();
+}
+
+export function getCharactersForFollowerAssignment() {
+  return supabase
+    .from("characters")
+    .select("id, character_name, player_name")
+    .order("character_name", { ascending: true });
+}
+
+export function assignFollower(followerId, characterId) {
+  return supabase.rpc("assign_follower_to_character", {
+    p_follower_id: followerId,
+    p_character_id: characterId,
+  });
+}
+
+export function releaseFollower(followerId) {
+  return supabase.rpc("release_follower", {
+    p_follower_id: followerId,
+  });
+}

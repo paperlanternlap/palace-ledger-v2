@@ -92,6 +92,47 @@ textarea:focus-visible {
   text-align: center;
 }
 
+.list-pagination {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  min-height: 40px;
+  padding: 6px 10px;
+  border-top: 1px solid var(--line);
+  background: rgb(255 253 248 / 92%);
+}
+
+.list-pagination button {
+  width: 31px;
+  height: 31px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--ink);
+  background: white;
+}
+
+.list-pagination button:not(:disabled):hover {
+  color: var(--red);
+  border-color: #d8c2ad;
+  background: #fff9f1;
+}
+
+.list-pagination button:disabled {
+  opacity: 0.35;
+}
+
+.list-pagination span {
+  min-width: 38px;
+  color: var(--muted);
+  font-size: 10px;
+  text-align: center;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

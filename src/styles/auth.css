@@ -1,0 +1,169 @@
+.auth-page {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background:
+    radial-gradient(circle at 75% 10%, rgb(123 47 47 / 9%), transparent 28rem),
+    #f3efe7;
+}
+
+.login-card,
+.access-card {
+  width: min(420px, 100%);
+  padding: 32px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--paper);
+  box-shadow: 0 24px 70px rgb(68 38 29 / 12%);
+}
+
+.login-brand {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  margin-bottom: 28px;
+}
+
+.login-brand .brand-mark {
+  color: var(--red);
+  border-color: #d8c2ad;
+}
+
+.login-brand h1 {
+  margin: 0;
+  font: 700 21px "Noto Serif Thai", serif;
+}
+
+.login-brand p {
+  margin: 2px 0 0;
+  color: var(--muted);
+  font-size: 9px;
+  letter-spacing: 0.15em;
+}
+
+.auth-icon {
+  width: 45px;
+  height: 45px;
+  display: grid;
+  place-items: center;
+  margin-bottom: 13px;
+  border-radius: 12px;
+  color: var(--red);
+  background: #f5e8e1;
+}
+
+.auth-icon.denied {
+  margin-inline: auto;
+  color: #945050;
+  background: #fae8e6;
+}
+
+.login-card h2,
+.access-card h2 {
+  margin: 0;
+  font: 700 23px "Noto Serif Thai", serif;
+}
+
+.auth-description,
+.access-card p {
+  margin: 5px 0 20px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.login-card form,
+.login-card label {
+  display: flex;
+  flex-direction: column;
+}
+
+.login-card form {
+  gap: 14px;
+}
+
+.login-card label {
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.login-card input {
+  min-height: 43px;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  color: var(--ink);
+  background: white;
+}
+
+.login-card input:focus {
+  border-color: rgb(123 47 47 / 55%);
+  outline: 3px solid rgb(123 47 47 / 9%);
+}
+
+.login-card form > button,
+.access-card button {
+  min-height: 42px;
+  border: 0;
+  border-radius: 9px;
+  color: white;
+  background: var(--red);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.login-card form > button {
+  margin-top: 4px;
+}
+
+.access-card {
+  text-align: center;
+}
+
+.access-card button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 0 16px;
+}
+
+.auth-error {
+  margin: 0;
+  color: #9b4141;
+  font-size: 11px;
+}
+
+.auth-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  color: var(--red);
+}
+
+.auth-loading p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+@media (min-width: 1600px) {
+  .login-card,
+  .access-card {
+    width: 460px;
+    padding: 38px;
+  }
+
+  .login-card h2,
+  .access-card h2 {
+    font-size: 27px;
+  }
+
+  .auth-description,
+  .access-card p,
+  .login-card label {
+    font-size: 14px;
+  }
+}
