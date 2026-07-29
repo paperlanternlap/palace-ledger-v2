@@ -2,7 +2,7 @@
   height: 100vh;
   min-height: 0;
   display: grid;
-  grid-template-columns: 228px minmax(0, 1fr);
+  grid-template-columns: clamp(190px, 12vw, 228px) minmax(0, 1fr);
   overflow: hidden;
 }
 
@@ -109,7 +109,6 @@
   flex: none;
   width: 100%;
   min-height: 42px;
-  max-width: 1440px;
   margin: 0 auto 6px;
   display: flex;
   align-items: center;
@@ -126,12 +125,11 @@
 .workspace {
   min-height: 0;
   flex: 1;
-  max-width: 1440px;
   width: 100%;
   height: auto;
   margin: auto;
   display: grid;
-  grid-template-columns: 330px minmax(0, 1fr);
+  grid-template-columns: clamp(300px, 24vw, 380px) minmax(0, 1fr);
   gap: 16px;
 }
 
