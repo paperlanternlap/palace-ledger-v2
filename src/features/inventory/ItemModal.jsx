@@ -7,8 +7,8 @@ import {
 } from "./inventoryService";
 
 const itemCategories = [
-  { value: "general", label: "ทั่วไป" },
-  { value: "favor", label: "เพิ่มโปรดปราน / รางวัล" },
+  { value: "general", label: "ของใช้ทั่วไป" },
+  { value: "favor", label: "เพิ่มโปรดปราน" },
   { value: "medicine", label: "ยาและการรักษา" },
   { value: "secret", label: "แผนลับ / ใส่ร้าย" },
   { value: "access", label: "เปิดพื้นที่หรืออีเวนต์" },
@@ -33,6 +33,10 @@ function normalizeTasks(tasks) {
 export function CreateItemModal({ onClose, onSaved }) {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
+  const [cost, setCost] = useState(0);
+  const [priceCurrency, setPriceCurrency] = useState("rp");
+  const [fulfillmentType, setFulfillmentType] = useState("inventory");
+  const [shopAvailable, setShopAvailable] = useState(false);
   const [isLimited, setIsLimited] = useState(false);
   const [stockQuantity, setStockQuantity] = useState(0);
   const [lowStockThreshold, setLowStockThreshold] = useState(5);
@@ -46,6 +50,10 @@ export function CreateItemModal({ onClose, onSaved }) {
     const { error: createError } = await createCatalogItem({
       name: name.trim(),
       description: description.trim(),
+      cost: Number(cost) || 0,
+      priceCurrency,
+      fulfillmentType,
+      shopAvailable,
       isLimited,
       stockQuantity: Number(stockQuantity) || 0,
       lowStockThreshold: Number(lowStockThreshold) || 0,
@@ -99,6 +107,53 @@ export function CreateItemModal({ onClose, onSaved }) {
               placeholder="คำอธิบายหรือวิธีใช้..."
               onChange={(event) => setDescription(event.target.value)}
             />
+          </label>
+
+          <div className="item-form-grid">
+            <label>
+              ราคา
+              <input
+                type="number"
+                min="0"
+                value={cost}
+                onChange={(event) => setCost(event.target.value)}
+              />
+            </label>
+            <label>
+              ใช้แต้ม
+              <select
+                value={priceCurrency}
+                onChange={(event) => setPriceCurrency(event.target.value)}
+              >
+                <option value="rp">RP</option>
+                <option value="favor">โปรดปราน</option>
+              </select>
+            </label>
+          </div>
+
+          <label>
+            ซื้อแล้วได้รับ
+            <select
+              value={fulfillmentType}
+              onChange={(event) => setFulfillmentType(event.target.value)}
+            >
+              <option value="inventory">ไอเท็มเข้าคลัง — กดใช้ภายหลัง</option>
+              <option value="staff_request">
+                เหตุการณ์พิเศษ — สร้างงานให้สต๊าฟทันที
+              </option>
+            </select>
+          </label>
+
+          <label className="stock-toggle">
+            <input
+              type="checkbox"
+              checked={shopAvailable}
+              onChange={(event) => setShopAvailable(event.target.checked)}
+            />
+            <span>
+              <strong>แสดงในร้านลูกมู</strong>
+              <small>ปิดไว้สำหรับของเนื้อเรื่องหรือของที่แจกโดยสต๊าฟเท่านั้น</small>
+            </span>
           </label>
 
           <label className="stock-toggle">
@@ -256,6 +311,16 @@ export function AdjustStockModal({ item, onClose, onSaved }) {
 export function EditItemModal({ item, onClose, onSaved }) {
   const [name, setName] = useState(item.name);
   const [description, setDescription] = useState(item.description || "");
+  const [cost, setCost] = useState(item.cost || 0);
+  const [priceCurrency, setPriceCurrency] = useState(
+    item.price_currency || "rp",
+  );
+  const [fulfillmentType, setFulfillmentType] = useState(
+    item.fulfillment_type || "inventory",
+  );
+  const [shopAvailable, setShopAvailable] = useState(
+    Boolean(item.shop_available),
+  );
   const [useCategory, setUseCategory] = useState(
     item.use_category || "general",
   );
@@ -308,6 +373,10 @@ export function EditItemModal({ item, onClose, onSaved }) {
       id: item.id,
       name: name.trim(),
       description: description.trim(),
+      cost: Number(cost) || 0,
+      priceCurrency,
+      fulfillmentType,
+      shopAvailable,
       useCategory,
       defaultChannel: defaultChannel.trim(),
       requiresTarget,
@@ -377,6 +446,55 @@ export function EditItemModal({ item, onClose, onSaved }) {
               </select>
             </label>
           </div>
+
+          <div className="item-form-grid">
+            <label>
+              ราคา
+              <input
+                type="number"
+                min="0"
+                value={cost}
+                onChange={(event) => setCost(event.target.value)}
+              />
+            </label>
+            <label>
+              ใช้แต้ม
+              <select
+                value={priceCurrency}
+                onChange={(event) => setPriceCurrency(event.target.value)}
+              >
+                <option value="rp">RP</option>
+                <option value="favor">โปรดปราน</option>
+              </select>
+            </label>
+          </div>
+
+          <label>
+            ซื้อแล้วได้รับ
+            <select
+              value={fulfillmentType}
+              onChange={(event) => setFulfillmentType(event.target.value)}
+            >
+              <option value="inventory">ไอเท็มเข้าคลัง — กดใช้ภายหลัง</option>
+              <option value="staff_request">
+                เหตุการณ์พิเศษ — สร้างงานให้สต๊าฟทันที
+              </option>
+            </select>
+          </label>
+
+          <label className="stock-toggle">
+            <input
+              type="checkbox"
+              checked={shopAvailable}
+              onChange={(event) => setShopAvailable(event.target.checked)}
+            />
+            <span>
+              <strong>แสดงในร้านลูกมู</strong>
+              <small>
+                ลูกมูจะเห็นและซื้อได้เฉพาะเมื่อเปิดตัวเลือกนี้และไอเท็มยังใช้งานอยู่
+              </small>
+            </span>
+          </label>
 
           <label>
             รายละเอียดและผลของไอเท็ม

@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
-import { UserPlus, Users, X } from "lucide-react";
+import { Plus, Trash2, UserPlus, Users, X } from "lucide-react";
 import {
   assignFollower,
-  createFollower,
+  createFollowerWithTalents,
   getCharactersForFollowerAssignment,
 } from "./followerService";
 
@@ -11,9 +11,31 @@ const followerTypes = [
   { value: "maid", label: "นางกำนัลทั่วไป" },
   { value: "eunuch", label: "ขันที" },
   { value: "kitchen", label: "คนจากห้องเครื่อง" },
+  { value: "gardener", label: "คนสวน" },
   { value: "physician", label: "หมอ / ผู้ช่วยแพทย์" },
   { value: "guard", label: "ทหาร / องครักษ์" },
+  { value: "merchant", label: "พ่อค้า" },
+  { value: "tailor", label: "ช่างเย็บปัก" },
+  { value: "scribe", label: "เสมียน" },
+  { value: "courier", label: "คนส่งของ" },
+  { value: "ritual_attendant", label: "ผู้ดูแลงานพิธี" },
   { value: "other", label: "อื่น ๆ" },
+];
+
+const talentOptions = [
+  "สวน",
+  "สมุนไพร",
+  "ข่าว",
+  "อาหาร",
+  "ข่าวห้องเครื่อง",
+  "ข่าววังหลัง",
+  "ข่าวพระสนม",
+  "การเมือง",
+  "ติดตามคน",
+  "การค้า",
+  "เอกสาร",
+  "การแพทย์",
+  "ความลับ",
 ];
 
 function splitTags(value) {
@@ -31,9 +53,10 @@ export function CreateFollowerModal({ onClose, onCreated }) {
     description: "",
     accessAreas: "",
     cost: 0,
-    skillType: "intelligence",
-    skillValue: 1,
     weeklyMissionLimit: 1,
+    talents: [
+      { key: "ข่าว", label: "สืบข่าว", modifierPercent: 20 },
+    ],
   });
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
@@ -42,20 +65,54 @@ export function CreateFollowerModal({ onClose, onCreated }) {
     setForm((current) => ({ ...current, [key]: value }));
   }
 
+  function updateTalent(index, key, value) {
+    setForm((current) => ({
+      ...current,
+      talents: current.talents.map((talent, talentIndex) =>
+        talentIndex === index ? { ...talent, [key]: value } : talent,
+      ),
+    }));
+  }
+
+  function addTalent() {
+    setForm((current) => ({
+      ...current,
+      talents: [
+        ...current.talents,
+        { key: "สวน", label: "ความถนัด", modifierPercent: 10 },
+      ],
+    }));
+  }
+
+  function removeTalent(index) {
+    setForm((current) => ({
+      ...current,
+      talents: current.talents.filter((_, talentIndex) => talentIndex !== index),
+    }));
+  }
+
   async function submit(event) {
     event.preventDefault();
     setSubmitting(true);
     setError("");
-    const { data, error: createError } = await createFollower({
+    const { data, error: createError } = await createFollowerWithTalents({
       ...form,
       name: form.name.trim(),
       avatarUrl: form.avatarUrl.trim(),
       description: form.description.trim(),
       accessAreas: splitTags(form.accessAreas),
       cost: Number(form.cost) || 0,
-      skillType: form.skillType,
-      skillValue: Number(form.skillValue) || 0,
       weeklyMissionLimit: Number(form.weeklyMissionLimit) || 0,
+      talents: form.talents
+        .map((talent) => ({
+          key: talent.key.trim(),
+          label: talent.label.trim() || talent.key.trim(),
+          modifierPercent: Number(talent.modifierPercent) || 0,
+        }))
+        .filter((talent, index, talents) =>
+          talent.key &&
+          talents.findIndex((item) => item.key === talent.key) === index
+        ),
     });
     setSubmitting(false);
 
@@ -150,32 +207,6 @@ export function CreateFollowerModal({ onClose, onCreated }) {
             />
           </label>
 
-          <div className="follower-form-grid">
-            <label>
-              ประเภทสกิล
-              <select
-                value={form.skillType}
-                onChange={(event) => update("skillType", event.target.value)}
-              >
-                <option value="intelligence">สืบข่าว</option>
-                <option value="negotiation">เจรจา</option>
-                <option value="trade">การค้า</option>
-                <option value="medicine">การแพทย์</option>
-                <option value="stealth">ลอบเร้น</option>
-                <option value="combat">ต่อสู้</option>
-              </select>
-            </label>
-            <label>
-              ค่าสกิล
-              <input
-                type="number"
-                min="0"
-                value={form.skillValue}
-                onChange={(event) => update("skillValue", event.target.value)}
-              />
-            </label>
-          </div>
-
           <label>
             พื้นที่เข้าถึง
             <input
@@ -185,6 +216,70 @@ export function CreateFollowerModal({ onClose, onCreated }) {
             />
             <small>คั่นแต่ละรายการด้วยเครื่องหมายจุลภาค</small>
           </label>
+
+          <fieldset className="follower-talent-editor">
+            <div className="follower-talent-heading">
+              <div>
+                <strong>Talent สำหรับการสำรวจ</strong>
+                <small>ค่าบวกช่วยเพิ่มโอกาส ค่าลบเป็นจุดอ่อน</small>
+              </div>
+              <button type="button" onClick={addTalent}>
+                <Plus size={14} /> เพิ่ม Talent
+              </button>
+            </div>
+            {form.talents.map((talent, index) => (
+              <div className="follower-talent-row" key={`${index}-${talent.key}`}>
+                <label>
+                  หัวข้อ
+                  <input
+                    list="follower-talent-options"
+                    value={talent.key}
+                    onChange={(event) =>
+                      updateTalent(index, "key", event.target.value)
+                    }
+                  />
+                </label>
+                <label>
+                  ชื่อที่แสดง
+                  <input
+                    value={talent.label}
+                    placeholder="เช่น ชำนาญสวน"
+                    onChange={(event) =>
+                      updateTalent(index, "label", event.target.value)
+                    }
+                  />
+                </label>
+                <label>
+                  ผลต่อโอกาส
+                  <div className="talent-percent-input">
+                    <input
+                      type="number"
+                      min="-100"
+                      max="100"
+                      value={talent.modifierPercent}
+                      onChange={(event) =>
+                        updateTalent(index, "modifierPercent", event.target.value)
+                      }
+                    />
+                    <span>%</span>
+                  </div>
+                </label>
+                <button
+                  type="button"
+                  className="talent-remove"
+                  aria-label="ลบ Talent"
+                  onClick={() => removeTalent(index)}
+                >
+                  <Trash2 size={15} />
+                </button>
+              </div>
+            ))}
+            <datalist id="follower-talent-options">
+              {talentOptions.map((option) => (
+                <option key={option} value={option} />
+              ))}
+            </datalist>
+          </fieldset>
 
           <label>
             ส่งภารกิจได้ต่อสัปดาห์

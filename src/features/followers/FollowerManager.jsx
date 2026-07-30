@@ -22,6 +22,7 @@ import {
   getFollowers,
   releaseFollower,
 } from "./followerService";
+import { FollowerMissionQueue } from "./FollowerMissionQueue";
 
 const statusLabels = {
   available: "พร้อมรับสมัคร",
@@ -35,18 +36,15 @@ const typeLabels = {
   maid: "นางกำนัลทั่วไป",
   eunuch: "ขันที",
   kitchen: "คนจากห้องเครื่อง",
+  gardener: "คนสวน",
   physician: "หมอ / ผู้ช่วยแพทย์",
   guard: "ทหาร / องครักษ์",
+  merchant: "พ่อค้า",
+  tailor: "ช่างเย็บปัก",
+  scribe: "เสมียน",
+  courier: "คนส่งของ",
+  ritual_attendant: "ผู้ดูแลงานพิธี",
   other: "อื่น ๆ",
-};
-
-const levelLabels = {
-  intelligence: "สืบข่าว",
-  negotiation: "เจรจา",
-  trade: "การค้า",
-  medicine: "การแพทย์",
-  stealth: "ลอบเร้น",
-  combat: "ต่อสู้",
 };
 
 function FollowerList({ followers, selectedId, loading, onSelect }) {
@@ -168,22 +166,36 @@ function FollowerDetail({ follower, busy, onAssign, onRelease }) {
           <strong>{Number(follower.cost || 0).toLocaleString("th-TH")}</strong>
         </div>
         <div>
-          <span>ประเภทสกิล</span>
-          <strong>
-            {levelLabels[follower.skill_type] || follower.skill_type || "—"}
-          </strong>
-        </div>
-        <div>
-          <span>ค่าสกิล</span>
-          <strong>{follower.skill_value ?? "—"}</strong>
-        </div>
-        <div>
           <span>ภารกิจต่อสัปดาห์</span>
           <strong>{follower.weekly_mission_limit}</strong>
         </div>
       </div>
 
       <div className="follower-capabilities">
+        <div className="follower-tag-group">
+          <div>
+            <BrainCircuit size={16} />
+            <strong>Talent สำรวจ</strong>
+          </div>
+          <div>
+            {follower.talents?.length ? (
+              follower.talents.map((talent) => (
+                <span
+                  key={talent.id || talent.talent_key}
+                  className={talent.modifier_percent < 0 ? "negative" : "positive"}
+                >
+                  {talent.label || talent.talent_key}{" "}
+                  <b>
+                    {talent.modifier_percent > 0 ? "+" : ""}
+                    {talent.modifier_percent}%
+                  </b>
+                </span>
+              ))
+            ) : (
+              <small>ยังไม่ได้กำหนด Talent</small>
+            )}
+          </div>
+        </div>
         <TagGroup
           icon={Sparkles}
           title="พื้นที่เข้าถึง"
@@ -233,6 +245,7 @@ export function FollowerManager() {
   const [setupRequired, setSetupRequired] = useState(false);
   const [showCreate, setShowCreate] = useState(false);
   const [assigning, setAssigning] = useState(null);
+  const [section, setSection] = useState("registry");
 
   async function loadFollowers(preferredId, preserveCurrent = true) {
     setLoading(true);
@@ -271,7 +284,10 @@ export function FollowerManager() {
         typeLabels[follower.follower_type],
         follower.owner?.character_name,
         follower.owner?.player_name,
-        follower.skill_type,
+        ...(follower.talents || []).flatMap((talent) => [
+          talent.talent_key,
+          talent.label,
+        ]),
         ...(follower.access_areas || []),
       ]
         .filter(Boolean)
@@ -284,9 +300,11 @@ export function FollowerManager() {
   const overview = useMemo(() => {
     const statusCount = (status) =>
       followers.filter((follower) => follower.view_status === status).length;
-    const skillCounts = followers.reduce((result, follower) => {
-      const skill = follower.skill_type || "other";
-      result[skill] = (result[skill] || 0) + 1;
+    const talentCounts = followers.reduce((result, follower) => {
+      (follower.talents || []).forEach((talent) => {
+        const key = talent.label || talent.talent_key;
+        result[key] = (result[key] || 0) + 1;
+      });
       return result;
     }, {});
     const areaCounts = followers.reduce((result, follower) => {
@@ -302,7 +320,7 @@ export function FollowerManager() {
       assigned: statusCount("assigned"),
       onMission: statusCount("on_mission"),
       unavailable: statusCount("unavailable"),
-      skills: Object.entries(skillCounts).sort((a, b) => b[1] - a[1]),
+      talents: Object.entries(talentCounts).sort((a, b) => b[1] - a[1]),
       areas: Object.entries(areaCounts)
         .sort((a, b) => b[1] - a[1])
         .slice(0, 6),
@@ -387,10 +405,10 @@ export function FollowerManager() {
               <BrainCircuit size={15} /> สายความถนัดที่มี
             </span>
             <div>
-              {overview.skills.length ? (
-                overview.skills.map(([skill, count]) => (
-                  <span key={skill}>
-                    {levelLabels[skill] || skill} <strong>{count}</strong>
+              {overview.talents.length ? (
+                overview.talents.map(([talent, count]) => (
+                  <span key={talent}>
+                    {talent} <strong>{count}</strong>
                   </span>
                 ))
               ) : (
@@ -417,10 +435,34 @@ export function FollowerManager() {
         </div>
 
         <div className="follower-section-tabs">
-          <button type="button" className="active">ทะเบียนผู้ติดตาม</button>
-          <span>ภารกิจสำรวจและคลังผลจะต่อจากข้อมูลชุดนี้</span>
+          <button
+            type="button"
+            className={section === "registry" ? "active" : ""}
+            onClick={() => setSection("registry")}
+          >
+            ทะเบียนผู้ติดตาม
+          </button>
+          <button
+            type="button"
+            className={section === "missions" ? "active" : ""}
+            onClick={() => setSection("missions")}
+          >
+            ภารกิจสำรวจ
+          </button>
+          <span>
+            {section === "registry"
+              ? "จัดการเจ้าของ ความสามารถ และพื้นที่เข้าถึง"
+              : "สรุปผล ส่งรางวัล และคืนผู้ติดตามให้ลูกมู"}
+          </span>
         </div>
 
+        {section === "missions" ? (
+          <FollowerMissionQueue
+            onMissionChanged={async () => {
+              await loadFollowers(null, false);
+            }}
+          />
+        ) : (
         <div className="follower-workspace">
         <aside className="follower-directory">
           <div className="follower-tools">
@@ -483,6 +525,7 @@ export function FollowerManager() {
           onRelease={handleRelease}
         />
         </div>
+        )}
       </section>
 
       {showCreate && (

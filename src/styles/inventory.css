@@ -104,11 +104,11 @@
 
 .catalog-item {
   min-width: 0;
-  display: grid;
-  grid-template-rows: auto 1fr auto;
-  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  padding: 15px;
   border: 1px solid var(--line);
-  border-radius: 11px;
+  border-radius: 13px;
   background: #fbf8f2;
 }
 
@@ -124,19 +124,26 @@
 
 .catalog-item-head {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
   gap: 10px;
 }
 
+.catalog-item-copy {
+  min-height: 51px;
+  margin-top: 9px;
+}
+
 .catalog-item h3 {
-  margin: 2px 0 0;
-  font-size: 14px;
+  margin: 0;
+  color: var(--ink);
+  font-size: 15px;
+  line-height: 1.4;
 }
 
 .item-category {
   color: var(--red);
-  font-size: 9px;
+  font-size: 10px;
   font-weight: 700;
 }
 
@@ -146,53 +153,105 @@
   overflow: hidden;
   color: var(--muted);
   font-size: 10px;
+  line-height: 1.45;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
 }
 
 .stock-state {
   flex: none;
-  padding: 3px 7px;
+  padding: 4px 8px;
   border-radius: 99px;
   font-size: 9px;
+  font-weight: 700;
 }
 
 .stock-state.available { color: #4f704e; background: #e8f2e5; }
 .stock-state.low { color: #876126; background: #f9ebc9; }
 .stock-state.out { color: #914b4b; background: #f5dddd; }
 
-.catalog-stock {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  align-items: end;
-  gap: 2px 8px;
-  margin: 15px 0;
-  padding: 10px 11px;
-  border-radius: 8px;
-  background: rgb(255 255 255 / 68%);
+.catalog-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 9px;
 }
 
-.catalog-stock span,
-.catalog-stock small {
-  color: var(--muted);
+.catalog-tags span {
+  padding: 4px 7px;
+  border: 1px solid #e2d8ca;
+  border-radius: 99px;
+  color: #6f665c;
+  background: #f5f0e8;
   font-size: 9px;
+  line-height: 1;
 }
 
-.catalog-stock strong {
-  grid-row: 1 / 3;
-  grid-column: 2;
-  font: 700 23px "Noto Serif Thai", serif;
+.catalog-tags .shop {
+  color: #52704c;
+  border-color: #d6e2ce;
+  background: #edf4e9;
 }
 
-.catalog-stock .unlimited {
+.catalog-tags .task {
+  color: #8b4a46;
+  border-color: #ead2ce;
+  background: #faece9;
+}
+
+.catalog-commerce {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  margin: 13px 0 11px;
+  padding: 10px 11px;
+  border-top: 1px solid #eadfce;
+  border-bottom: 1px solid #eadfce;
+}
+
+.catalog-commerce > div {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.catalog-commerce small {
+  color: var(--muted);
+  font-size: 8px;
+}
+
+.catalog-commerce strong {
+  color: var(--ink);
+  font: 700 14px "Noto Serif Thai", serif;
+}
+
+.catalog-commerce strong em {
+  color: var(--muted);
+  font: 600 9px "Noto Sans Thai", sans-serif;
+  font-style: normal;
+}
+
+.catalog-stock-compact {
+  align-items: flex-end;
+  text-align: right;
+}
+
+.catalog-stock-compact .unlimited {
   display: flex;
   align-items: center;
+  gap: 4px;
 }
 
 .catalog-item-actions {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 7px;
+  margin-top: auto;
+}
+
+.catalog-item-actions.single {
+  grid-template-columns: 1fr;
 }
 
 .catalog-item-actions button {
@@ -213,12 +272,6 @@
 
 .catalog-item-actions button:first-child:hover {
   background: var(--red-dark);
-}
-
-.catalog-item-actions button:disabled {
-  color: var(--muted);
-  border-color: var(--line);
-  background: #f4f0e9;
 }
 
 .inventory-message {
@@ -498,6 +551,8 @@
   .catalog-grid { grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); }
   .catalog-item h3 { font-size: 16px; }
   .item-category { font-size: 11px; }
+  .catalog-price { font-size: 11px; }
+  .shop-visibility { font-size: 10px; }
   .catalog-item p,
   .catalog-item-actions button,
   .stock-state,

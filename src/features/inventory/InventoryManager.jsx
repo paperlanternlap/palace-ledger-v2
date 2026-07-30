@@ -18,6 +18,9 @@ import {
 import { getCatalogItems } from "./inventoryService";
 
 const filters = [
+  { id: "shop", label: "ขายในร้าน" },
+  { id: "reward", label: "ของแจก / รางวัล" },
+  { id: "story", label: "ของเนื้อเรื่อง" },
   { id: "all", label: "ทั้งหมด" },
   { id: "limited", label: "จำกัดจำนวน" },
   { id: "low", label: "ใกล้หมด" },
@@ -25,8 +28,8 @@ const filters = [
 ];
 
 const categoryLabels = {
-  general: "ทั่วไป",
-  favor: "โปรดปราน / รางวัล",
+  general: "ของใช้ทั่วไป",
+  favor: "เพิ่มโปรดปราน",
   medicine: "ยาและการรักษา",
   secret: "แผนลับ",
   access: "เปิดพื้นที่",
@@ -34,23 +37,31 @@ const categoryLabels = {
   story: "เนื้อเรื่อง",
 };
 
+function getAcquisitionLabel(item) {
+  if (item.shop_available) return "ซื้อจากร้าน";
+  if (item.use_category === "story") return "ของเนื้อเรื่อง";
+  return "ของแจก / รางวัล";
+}
+
 function ItemCard({ item, onAdjust, onEdit }) {
   const isOut = item.is_limited && item.stock_quantity === 0;
   const isLow =
     item.is_limited &&
     item.stock_quantity > 0 &&
     item.stock_quantity <= item.low_stock_threshold;
+  const fulfillmentLabel =
+    item.fulfillment_type === "staff_request"
+      ? "สร้างงานให้สต๊าฟ"
+      : "เข้าคลังตัวละคร";
+  const currencyLabel =
+    item.price_currency === "favor" ? "โปรดปราน" : "RP";
 
   return (
     <article className={`catalog-item ${isOut ? "out" : isLow ? "low" : ""}`}>
       <div className="catalog-item-head">
-        <div>
-          <span className="item-category">
-            {categoryLabels[item.use_category] || "ทั่วไป"}
-          </span>
-          <h3>{item.name}</h3>
-          <p>{item.description || "ไม่มีรายละเอียด"}</p>
-        </div>
+        <span className="item-category">
+          {categoryLabels[item.use_category] || "ของใช้ทั่วไป"}
+        </span>
         {isOut ? (
           <span className="stock-state out">หมด</span>
         ) : isLow ? (
@@ -60,35 +71,57 @@ function ItemCard({ item, onAdjust, onEdit }) {
         )}
       </div>
 
-      <div className="catalog-stock">
-        {item.is_limited ? (
-          <>
-            <span>คงเหลือ</span>
-            <strong>{item.stock_quantity}</strong>
-            <small>แจ้งเตือนที่ {item.low_stock_threshold}</small>
-          </>
-        ) : (
-          <>
-            <span>สต็อก</span>
-            <strong className="unlimited">
-              <InfinityIcon size={22} />
-            </strong>
-            <small>ไม่จำกัดจำนวน</small>
-          </>
-        )}
+      <div className="catalog-item-copy">
+        <h3>{item.name}</h3>
+        <p>{item.description || "ยังไม่มีรายละเอียด"}</p>
       </div>
 
-      <div className="catalog-item-actions">
+      <div className="catalog-tags" aria-label="รูปแบบการได้รับ">
+        <span className={item.shop_available ? "shop" : ""}>
+          {getAcquisitionLabel(item)}
+        </span>
+        <span className={item.fulfillment_type === "staff_request" ? "task" : ""}>
+          {fulfillmentLabel}
+        </span>
+      </div>
+
+      <div className="catalog-commerce">
+        <div>
+          <small>{item.shop_available ? "ราคาแลก" : "ไม่มีราคาในร้าน"}</small>
+          <strong>
+            {item.shop_available ? (
+              <>
+                {Number(item.cost || 0).toLocaleString("th-TH")}{" "}
+                <em>{currencyLabel}</em>
+              </>
+            ) : (
+              "แจกโดยสต๊าฟ"
+            )}
+          </strong>
+        </div>
+        <div className="catalog-stock-compact">
+          <small>สต็อก</small>
+          {item.is_limited ? (
+            <strong>
+              {item.stock_quantity} <em>ชิ้น</em>
+            </strong>
+          ) : (
+            <strong className="unlimited">
+              <InfinityIcon size={18} /> <em>ไม่จำกัด</em>
+            </strong>
+          )}
+        </div>
+      </div>
+
+      <div className={`catalog-item-actions ${item.is_limited ? "" : "single"}`}>
         <button type="button" onClick={() => onEdit(item)}>
-          ตั้งค่าการใช้
+          แก้ไขรายละเอียด
         </button>
-        <button
-          type="button"
-          disabled={!item.is_limited}
-          onClick={() => onAdjust(item)}
-        >
-          {item.is_limited ? "ปรับสต็อก" : "สต็อกไม่จำกัด"}
-        </button>
+        {item.is_limited && (
+          <button type="button" onClick={() => onAdjust(item)}>
+            ปรับสต็อก
+          </button>
+        )}
       </div>
     </article>
   );
@@ -97,7 +130,7 @@ function ItemCard({ item, onAdjust, onEdit }) {
 export function InventoryManager() {
   const [items, setItems] = useState([]);
   const [search, setSearch] = useState("");
-  const [filter, setFilter] = useState("all");
+  const [filter, setFilter] = useState("shop");
   const [loading, setLoading] = useState(true);
   const [setupRequired, setSetupRequired] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -155,6 +188,13 @@ export function InventoryManager() {
           .includes(keyword);
       const matchesFilter =
         filter === "all" ||
+        (filter === "shop" && item.shop_available) ||
+        (filter === "reward" &&
+          !item.shop_available &&
+          item.use_category !== "story") ||
+        (filter === "story" &&
+          !item.shop_available &&
+          item.use_category === "story") ||
         (filter === "limited" && item.is_limited) ||
         (filter === "low" &&
           item.is_limited &&
