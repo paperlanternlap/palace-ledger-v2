@@ -10,11 +10,16 @@ export function AdjustmentModal({
 }) {
   const [amount, setAmount] = useState("");
   const [note, setNote] = useState("");
+  const [operation, setOperation] = useState("add");
   const isRp = type === "rp";
 
   function handleSubmit(event) {
     event.preventDefault();
-    onSubmit({ amount: Number(amount), note: note.trim() });
+    onSubmit({
+      amount: Number(amount),
+      operation,
+      note: note.trim(),
+    });
   }
 
   return (
@@ -37,13 +42,21 @@ export function AdjustmentModal({
 
         <span className="eyebrow">บันทึกการเปลี่ยนแปลง</span>
         <h2 id="adjustment-title">
-          เพิ่ม{isRp ? " RP" : "ความโปรดปราน"}
+          จัดการ{isRp ? " RP" : "ความโปรดปราน"}
         </h2>
         <p className="modal-description">
           ให้แก่ <strong>{character.character_name}</strong>
         </p>
 
         <form onSubmit={handleSubmit}>
+          <div className="operation-toggle">
+            <button type="button" className={operation === "add" ? "active" : ""} onClick={() => setOperation("add")}>
+              เพิ่ม
+            </button>
+            <button type="button" className={operation === "subtract" ? "active subtract" : ""} onClick={() => setOperation("subtract")}>
+              หัก / ลด
+            </button>
+          </div>
           <label>
             จำนวน
             <input
@@ -76,7 +89,7 @@ export function AdjustmentModal({
               className="primary-button"
               disabled={submitting || !amount || !note.trim()}
             >
-              {submitting ? "กำลังบันทึก..." : "ยืนยันการเพิ่ม"}
+              {submitting ? "กำลังบันทึก..." : operation === "add" ? "ยืนยันการเพิ่ม" : "ยืนยันการหัก"}
             </button>
           </div>
         </form>

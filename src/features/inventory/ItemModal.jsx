@@ -561,7 +561,7 @@ export function EditItemModal({ item, onClose, onSaved }) {
               />
               <span>
                 <strong>ต้องรอการทอย</strong>
-                <small>เพิ่มงานรอผู้เล่นตอบหรือทอยให้อัตโนมัติ</small>
+                <small>ทอยแบบหลังไมค์ โดยผู้ได้รับผลเป็นผู้ทอยตามที่แม่งานแจ้ง</small>
               </span>
             </label>
           </div>

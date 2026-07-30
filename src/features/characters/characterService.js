@@ -64,7 +64,6 @@ export function getGrantableItems() {
   return supabase
     .from("items")
     .select("id, name, description, is_limited, stock_quantity, active")
-    .eq("active", true)
     .order("name", { ascending: true });
 }
 
@@ -79,5 +78,73 @@ export function grantItemToCharacter({
     p_character_id: characterId,
     p_quantity: quantity,
     p_note: note || null,
+  });
+}
+
+export function adjustCharacterResource({ characterId, resource, delta, note }) {
+  return supabase.rpc("adjust_character_resource", {
+    p_character_id: characterId,
+    p_resource: resource,
+    p_delta: delta,
+    p_note: note,
+  });
+}
+
+export function adjustCharacterItem({ characterId, itemId, delta, note }) {
+  return supabase.rpc("adjust_character_item", {
+    p_character_id: characterId,
+    p_item_id: itemId,
+    p_delta: delta,
+    p_note: note,
+  });
+}
+
+export function getPreviousPosition(position) {
+  return supabase
+    .from("rank_requirements")
+    .select("current_position")
+    .eq("next_position", position)
+    .limit(1)
+    .maybeSingle();
+}
+
+export function getNextPosition(position) {
+  return supabase
+    .from("rank_requirements")
+    .select("next_position, favor_required, max_slots")
+    .eq("current_position", position)
+    .limit(1)
+    .maybeSingle();
+}
+
+export function demoteCharacter({ characterId, note }) {
+  return supabase.rpc("demote_character", {
+    p_character_id: characterId,
+    p_note: note,
+  });
+}
+
+export function promoteCharacter({ characterId, note }) {
+  return supabase.rpc("promote_character_staff", {
+    p_character_id: characterId,
+    p_note: note,
+  });
+}
+
+export function specialAppointCharacter({
+  characterId,
+  role,
+  position,
+  action,
+  note,
+  restoreNormalPromotion,
+}) {
+  return supabase.rpc("special_appoint_character", {
+    p_character_id: characterId,
+    p_role: role,
+    p_position: position,
+    p_action: action,
+    p_note: note,
+    p_restore_normal_promotion: restoreNormalPromotion,
   });
 }

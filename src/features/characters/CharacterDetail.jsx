@@ -101,6 +101,9 @@ export function CharacterDetail({
   loading,
   onAdjust,
   onGrantItem,
+  onPromote,
+  onDemote,
+  onSpecialAppointment,
 }) {
   if (!character) {
     return (
@@ -163,19 +166,48 @@ export function CharacterDetail({
         </div>
       </header>
 
-      <div className="quick-actions">
-        <button type="button" onClick={() => onAdjust("rp")}>
-          <span>+ เพิ่ม RP</span>
-          <small>บันทึกคะแนนโรล</small>
-        </button>
-        <button type="button" onClick={() => onAdjust("favor")}>
-          <span>+ เพิ่มความโปรดปราน</span>
-          <small>บันทึกรางวัล</small>
-        </button>
-        <button type="button" onClick={onGrantItem}>
-          <span>+ เพิ่มไอเท็ม</span>
-          <small>มอบของให้ตัวละคร</small>
-        </button>
+      <div className="character-action-groups">
+        <section className="character-action-group">
+          <div className="character-action-group__heading">
+            <strong>ทรัพยากรตัวละคร</strong>
+            <span>เพิ่ม ลด และแก้ไขยอดที่ตัวละครถืออยู่</span>
+          </div>
+          <div className="quick-actions resource-actions">
+            <button type="button" onClick={() => onAdjust("rp")}>
+              <span>จัดการ RP</span>
+              <small>เพิ่มหรือหักคะแนน</small>
+            </button>
+            <button type="button" onClick={() => onAdjust("favor")}>
+              <span>จัดการโปรดปราน</span>
+              <small>เพิ่มหรือหักค่าโปรดปราน</small>
+            </button>
+            <button type="button" onClick={onGrantItem}>
+              <span>จัดการไอเท็ม</span>
+              <small>เพิ่ม ลด หรือลบออกจากคลัง</small>
+            </button>
+          </div>
+        </section>
+
+        <section className="character-action-group rank-action-group">
+          <div className="character-action-group__heading">
+            <strong>ตำแหน่งและพระราชโองการ</strong>
+            <span>จัดการลำดับขั้นหรือเปลี่ยนบทบาทเป็นกรณีพิเศษ</span>
+          </div>
+          <div className="quick-actions rank-actions">
+            <button type="button" className="promote-action" onClick={onPromote}>
+              <span>เลื่อนขั้น</span>
+              <small>ตรวจโปรดปรานและสล็อตตำแหน่ง</small>
+            </button>
+            <button type="button" className="danger-action" onClick={onDemote}>
+              <span>ลดขั้น</span>
+              <small>ลดตำแหน่งลงหนึ่งลำดับ</small>
+            </button>
+            <button type="button" className="special-action" onClick={onSpecialAppointment}>
+              <span>แต่งตั้งพิเศษ</span>
+              <small>ข้ามบทบาทหรือลดขั้นโดยพระราชโองการ</small>
+            </button>
+          </div>
+        </section>
       </div>
 
       <div className="detail-sections">

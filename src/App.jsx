@@ -6,11 +6,16 @@ import { CharacterDetail } from "./features/characters/CharacterDetail";
 import { CharacterDirectory } from "./features/characters/CharacterDirectory";
 import { GrantItemModal } from "./features/characters/GrantItemModal";
 import { CreateCharacterModal } from "./features/characters/CreateCharacterModal";
+import { DemotionModal } from "./features/characters/DemotionModal";
+import { PromotionModal } from "./features/characters/PromotionModal";
+import { SpecialAppointmentModal } from "./features/characters/SpecialAppointmentModal";
 import {
-  addHistory,
+  adjustCharacterResource,
+  demoteCharacter,
+  promoteCharacter,
+  specialAppointCharacter,
   getCharacterDetails,
   getCharacters,
-  updateScore,
 } from "./features/characters/characterService";
 import {
   filterCharacters,
@@ -42,6 +47,9 @@ function StaffApp() {
   const [adjustmentType, setAdjustmentType] = useState(null);
   const [showGrantItem, setShowGrantItem] = useState(false);
   const [showCreateCharacter, setShowCreateCharacter] = useState(false);
+  const [showDemotion, setShowDemotion] = useState(false);
+  const [showPromotion, setShowPromotion] = useState(false);
+  const [showSpecialAppointment, setShowSpecialAppointment] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [notice, setNotice] = useState(null);
   const [loggingOut, setLoggingOut] = useState(false);
@@ -90,47 +98,41 @@ function StaffApp() {
     setDetailLoading(false);
   }
 
-  async function submitAdjustment({ amount, note }) {
+  async function submitAdjustment({ amount, operation, note }) {
     if (!selectedCharacter || amount <= 0 || !note) return;
     setSubmitting(true);
 
     const field = adjustmentType === "rp" ? "rp" : "favor";
-    const currentValue = Number(selectedCharacter[field]) || 0;
-    const nextValue = currentValue + amount;
-    const label = adjustmentType === "rp" ? "RP" : "Favor";
-    const action =
-      adjustmentType === "rp" ? `เพิ่ม RP · ${note}` : `เพิ่มความโปรดปราน · ${note}`;
-
-    const { error } = await updateScore({
+    const delta = operation === "subtract" ? -amount : amount;
+    const { error } = await adjustCharacterResource({
       characterId: selectedCharacter.id,
-      field,
-      currentValue,
-      nextValue,
+      resource: field,
+      delta,
+      note,
     });
 
     if (error) {
-      setNotice({ type: "error", message: "บันทึกคะแนนไม่สำเร็จ กรุณาลองอีกครั้ง" });
+      setNotice({
+        type: "error",
+        message: error.message?.includes("Insufficient resource")
+          ? "ไม่สามารถหักเกินจำนวนที่ตัวละครมีอยู่ได้"
+          : "บันทึกคะแนนไม่สำเร็จ กรุณาลองอีกครั้ง",
+      });
       setSubmitting(false);
       return;
     }
 
-    const historyResult = await addHistory({
-      character_id: selectedCharacter.id,
-      action,
-      value: `+${formatNumber(amount)} ${label}`,
-      type: adjustmentType,
-    });
-
-    const updatedCharacter = { ...selectedCharacter, [field]: nextValue };
+    const updatedCharacter = {
+      ...selectedCharacter,
+      [field]: Number(selectedCharacter[field] || 0) + delta,
+    };
     setAdjustmentType(null);
     setSubmitting(false);
     setNotice({
-      type: historyResult.error ? "warning" : "success",
-      message: historyResult.error
-        ? "เพิ่มคะแนนแล้ว แต่บันทึกประวัติไม่สำเร็จ"
-        : "เพิ่มคะแนนและบันทึกประวัติเรียบร้อย",
+      type: "success",
+      message: operation === "subtract" ? "หักคะแนนเรียบร้อย" : "เพิ่มคะแนนเรียบร้อย",
     });
-    await loadCharacters(selectedCharacter.id);
+    await loadCharacters(updatedCharacter.id);
     await selectCharacter(updatedCharacter);
   }
 
@@ -222,6 +224,9 @@ function StaffApp() {
               loading={detailLoading}
               onAdjust={setAdjustmentType}
               onGrantItem={() => setShowGrantItem(true)}
+              onPromote={() => setShowPromotion(true)}
+              onDemote={() => setShowDemotion(true)}
+              onSpecialAppointment={() => setShowSpecialAppointment(true)}
             />
           </section>
         ) : activePage === "rp-queue" ? (
@@ -265,22 +270,113 @@ function StaffApp() {
       {showGrantItem && selectedCharacter && (
         <GrantItemModal
           character={selectedCharacter}
+          inventory={inventory}
           onClose={() => setShowGrantItem(false)}
-          onSaved={async ({ itemName, quantity, note }) => {
+          onSaved={async ({ itemName, quantity, operation }) => {
             setShowGrantItem(false);
-            const historyResult = await addHistory({
-              character_id: selectedCharacter.id,
-              action: `เพิ่มไอเท็ม · ${note}`,
-              value: `+${formatNumber(quantity)} ${itemName}`,
-              type: "item",
-            });
             setNotice({
-              type: historyResult.error ? "warning" : "success",
-              message: historyResult.error
-                ? "เพิ่มไอเท็มแล้ว แต่บันทึกประวัติไม่สำเร็จ"
-                : `เพิ่ม ${itemName} ให้ ${selectedCharacter.character_name} แล้ว`,
+              type: "success",
+              message:
+                operation === "add"
+                  ? `เพิ่ม ${itemName} ให้ ${selectedCharacter.character_name} แล้ว`
+                  : `นำ ${itemName} จำนวน ${formatNumber(quantity)} ชิ้นออกแล้ว`,
             });
             await selectCharacter(selectedCharacter);
+          }}
+        />
+      )}
+
+      {showDemotion && selectedCharacter && (
+        <DemotionModal
+          character={selectedCharacter}
+          submitting={submitting}
+          onClose={() => setShowDemotion(false)}
+          onSubmit={async ({ note }) => {
+            setSubmitting(true);
+            const { error } = await demoteCharacter({
+              characterId: selectedCharacter.id,
+              note,
+            });
+            setSubmitting(false);
+            if (error) {
+              setNotice({
+                type: "error",
+                message: error.message?.includes("No lower rank")
+                  ? "ตำแหน่งนี้ไม่สามารถลดขั้นได้อีก"
+                  : "ลดขั้นไม่สำเร็จ",
+              });
+              return;
+            }
+            setShowDemotion(false);
+            setNotice({ type: "success", message: "ลดขั้นและบันทึกประวัติแล้ว" });
+            await loadCharacters(selectedCharacter.id);
+            const { data } = await getCharacters();
+            const fresh = data?.find((item) => item.id === selectedCharacter.id);
+            if (fresh) await selectCharacter(fresh);
+          }}
+        />
+      )}
+
+      {showPromotion && selectedCharacter && (
+        <PromotionModal
+          character={selectedCharacter}
+          submitting={submitting}
+          onClose={() => setShowPromotion(false)}
+          onSubmit={async ({ note }) => {
+            setSubmitting(true);
+            const { data, error } = await promoteCharacter({
+              characterId: selectedCharacter.id,
+              note,
+            });
+            setSubmitting(false);
+            if (error) {
+              setNotice({
+                type: "error",
+                message: error.message?.includes("Insufficient favor")
+                  ? "โปรดปรานไม่เพียงพอ"
+                  : error.message?.includes("promotion is locked")
+                    ? "ตัวละครถูกระงับสิทธิ์เลื่อนขั้นด้วยโปรดปราน"
+                  : error.message?.includes("slots are full")
+                    ? "ตำแหน่งนี้เต็มแล้ว"
+                    : error.message?.includes("No higher rank")
+                      ? "ตำแหน่งนี้ไม่สามารถเลื่อนขั้นได้อีก"
+                      : "เลื่อนขั้นไม่สำเร็จ",
+              });
+              return;
+            }
+            setShowPromotion(false);
+            setNotice({ type: "success", message: "เลื่อนขั้นและบันทึกประวัติแล้ว" });
+            await loadCharacters(data.id);
+            await selectCharacter(data);
+          }}
+        />
+      )}
+
+      {showSpecialAppointment && selectedCharacter && (
+        <SpecialAppointmentModal
+          character={selectedCharacter}
+          submitting={submitting}
+          onClose={() => setShowSpecialAppointment(false)}
+          onSubmit={async (values) => {
+            setSubmitting(true);
+            const { data, error } = await specialAppointCharacter({
+              characterId: selectedCharacter.id,
+              ...values,
+            });
+            setSubmitting(false);
+            if (error) {
+              setNotice({ type: "error", message: "บันทึกการแต่งตั้งพิเศษไม่สำเร็จ" });
+              return;
+            }
+            setShowSpecialAppointment(false);
+            setNotice({
+              type: "success",
+              message: values.action === "imperial_demote"
+                ? "ลดขั้นพิเศษและปิดสิทธิ์เลื่อนขั้นแล้ว"
+                : "บันทึกการแต่งตั้งพิเศษแล้ว",
+            });
+            await loadCharacters(data.id);
+            await selectCharacter(data);
           }}
         />
       )}
