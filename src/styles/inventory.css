@@ -562,6 +562,33 @@
   .item-modal label { font-size: 14px; }
 }
 
+.item-delete-button {
+  min-height: 36px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 11px;
+  border: 1px solid #dfbbb6;
+  border-radius: 8px;
+  color: #9b433e;
+  background: #fff5f3;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.item-delete-button:hover:not(:disabled) {
+  border-color: #c98982;
+  background: #fce9e6;
+}
+
+.item-delete-button:disabled {
+  opacity: 0.5;
+}
+
+.modal-actions-spacer {
+  flex: 1;
+}
+
 @media (max-width: 820px) {
   .inventory-page {
     min-height: 700px;

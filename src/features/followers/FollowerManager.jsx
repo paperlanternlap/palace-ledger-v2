@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
 import {
   BrainCircuit,
+  ChevronDown,
   Compass,
   DoorOpen,
   MapPin,
+  Pencil,
   Plus,
   Search,
   Sparkles,
@@ -17,12 +19,14 @@ import { useListPagination } from "../../components/ui/useListPagination";
 import {
   AssignFollowerModal,
   CreateFollowerModal,
+  EditFollowerModal,
 } from "./FollowerModal";
 import {
   getFollowers,
   releaseFollower,
 } from "./followerService";
 import { FollowerMissionQueue } from "./FollowerMissionQueue";
+import { FollowerLocationManager } from "./FollowerLocationManager";
 
 const statusLabels = {
   available: "พร้อมรับสมัคร",
@@ -46,6 +50,48 @@ const typeLabels = {
   ritual_attendant: "ผู้ดูแลงานพิธี",
   other: "อื่น ๆ",
 };
+
+const talentGroupDefinitions = [
+  {
+    id: "intelligence",
+    label: "ข่าวสารและการสืบค้น",
+    keys: ["ข่าว", "ข่าวห้องเครื่อง", "ข่าววังหลัง", "ข่าวพระสนม", "การเมือง", "ติดตามคน", "ความลับ", "บุคคลเข้าออก"],
+  },
+  {
+    id: "medicine",
+    label: "แพทย์และธรรมชาติ",
+    keys: ["สวน", "สมุนไพร", "การแพทย์", "ยา"],
+  },
+  {
+    id: "resources",
+    label: "ครัวและทรัพยากร",
+    keys: ["อาหาร", "วัตถุดิบ"],
+  },
+  {
+    id: "craft",
+    label: "งานช่างและพิธีการ",
+    keys: ["เครื่องแต่งกาย", "งานฝีมือ", "พิธีการ", "คัมภีร์"],
+  },
+  {
+    id: "commerce",
+    label: "การค้าและเอกสาร",
+    keys: ["การค้า", "เอกสาร", "การเงิน"],
+  },
+  {
+    id: "field",
+    label: "การเดินทางและความปลอดภัย",
+    keys: ["การเดินทาง", "ประตู", "อาวุธ"],
+  },
+];
+
+function getTalentGroup(talentKey) {
+  return (
+    talentGroupDefinitions.find((group) => group.keys.includes(talentKey)) || {
+      id: "other",
+      label: "ความถนัดอื่น ๆ",
+    }
+  );
+}
 
 function FollowerList({ followers, selectedId, loading, onSelect }) {
   if (loading) {
@@ -117,7 +163,7 @@ function TagGroup({ icon: Icon, title, tags, emptyText }) {
   );
 }
 
-function FollowerDetail({ follower, busy, onAssign, onRelease }) {
+function FollowerDetail({ follower, busy, onAssign, onEdit, onRelease }) {
   if (!follower) {
     return (
       <section className="follower-detail follower-empty">
@@ -211,6 +257,14 @@ function FollowerDetail({ follower, busy, onAssign, onRelease }) {
       </div>
 
       <div className="follower-actions">
+        <button
+          type="button"
+          className="follower-edit-button"
+          disabled={busy}
+          onClick={() => onEdit(follower)}
+        >
+          <Pencil size={15} /> แก้ไขข้อมูล
+        </button>
         {follower.view_status === "available" ? (
           <button
             type="button"
@@ -244,8 +298,10 @@ export function FollowerManager() {
   const [busy, setBusy] = useState(false);
   const [setupRequired, setSetupRequired] = useState(false);
   const [showCreate, setShowCreate] = useState(false);
+  const [editing, setEditing] = useState(null);
   const [assigning, setAssigning] = useState(null);
   const [section, setSection] = useState("registry");
+  const [showInsights, setShowInsights] = useState(false);
 
   async function loadFollowers(preferredId, preserveCurrent = true) {
     setLoading(true);
@@ -302,8 +358,15 @@ export function FollowerManager() {
       followers.filter((follower) => follower.view_status === status).length;
     const talentCounts = followers.reduce((result, follower) => {
       (follower.talents || []).forEach((talent) => {
-        const key = talent.label || talent.talent_key;
-        result[key] = (result[key] || 0) + 1;
+        const talentKey = talent.talent_key || "อื่น ๆ";
+        const label = talent.label || talentKey;
+        const id = `${talentKey}::${label}`;
+        result[id] = result[id] || {
+          key: talentKey,
+          label,
+          count: 0,
+        };
+        result[id].count += 1;
       });
       return result;
     }, {});
@@ -320,7 +383,18 @@ export function FollowerManager() {
       assigned: statusCount("assigned"),
       onMission: statusCount("on_mission"),
       unavailable: statusCount("unavailable"),
-      talents: Object.entries(talentCounts).sort((a, b) => b[1] - a[1]),
+      talentGroups: Object.values(talentCounts)
+        .sort((a, b) => b.count - a.count)
+        .reduce((groups, talent) => {
+          const group = getTalentGroup(talent.key);
+          const current = groups.find((item) => item.id === group.id);
+          if (current) {
+            current.items.push(talent);
+          } else {
+            groups.push({ ...group, items: [talent] });
+          }
+          return groups;
+        }, []),
       areas: Object.entries(areaCounts)
         .sort((a, b) => b[1] - a[1])
         .slice(0, 6),
@@ -351,7 +425,43 @@ export function FollowerManager() {
   return (
     <>
       <section className="follower-page">
-        <div className="follower-overview">
+        <div className="follower-nav-row">
+          <div className="follower-section-tabs">
+            <button
+              type="button"
+              className={section === "registry" ? "active" : ""}
+              onClick={() => setSection("registry")}
+            >
+              ทะเบียนผู้ติดตาม
+            </button>
+            <button
+              type="button"
+              className={section === "missions" ? "active" : ""}
+              onClick={() => setSection("missions")}
+            >
+              ภารกิจสำรวจ
+            </button>
+            <button
+              type="button"
+              className={section === "locations" ? "active" : ""}
+              onClick={() => setSection("locations")}
+            >
+              จัดการโลเคชั่น
+            </button>
+            <span>
+              {section === "registry"
+                ? "จัดการเจ้าของ ความสามารถ และพื้นที่เข้าถึง"
+                : section === "missions"
+                  ? "สรุปผล ส่งรางวัล และคืนผู้ติดตามให้ลูกมู"
+                  : "ตั้งค่าพื้นที่ Tag และโอกาสสำเร็จพื้นฐาน"}
+            </span>
+          </div>
+        </div>
+
+        {section === "registry" && (
+          <div className="follower-registry-controls">
+            <div className="follower-filter-row">
+              <div className="follower-overview" aria-label="กรองตามสถานะ">
           <button
             type="button"
             className={filter === "all" ? "active" : ""}
@@ -397,64 +507,68 @@ export function FollowerManager() {
             <span>ใช้งานไม่ได้</span>
             <strong>{overview.unavailable}</strong>
           </button>
-        </div>
-
-        <div className="follower-insights">
-          <div>
-            <span className="follower-insight-title">
-              <BrainCircuit size={15} /> สายความถนัดที่มี
-            </span>
-            <div>
-              {overview.talents.length ? (
-                overview.talents.map(([talent, count]) => (
-                  <span key={talent}>
-                    {talent} <strong>{count}</strong>
-                  </span>
-                ))
-              ) : (
-                <small>ยังไม่มีข้อมูลสกิล</small>
-              )}
+              </div>
+              <button
+                type="button"
+                className={`follower-insights-trigger ${showInsights ? "active" : ""}`}
+                aria-expanded={showInsights}
+                onClick={() => setShowInsights((current) => !current)}
+              >
+                <BrainCircuit size={15} />
+                ดูภาพรวมความถนัดและพื้นที่
+                <ChevronDown size={14} />
+              </button>
             </div>
-          </div>
-          <div>
-            <span className="follower-insight-title">
-              <MapPin size={15} /> พื้นที่ที่เข้าถึงได้
-            </span>
-            <div>
-              {overview.areas.length ? (
-                overview.areas.map(([area, count]) => (
-                  <span key={area}>
-                    {area} <strong>{count}</strong>
+            {showInsights && (
+              <div className="follower-insights">
+                <div>
+                  <span className="follower-insight-title">
+                    <BrainCircuit size={15} /> สายความถนัดที่มี
                   </span>
-                ))
-              ) : (
-                <small>เพิ่มพื้นที่ให้ผู้ติดตามเพื่อเตรียมระบบสำรวจ</small>
-              )}
-            </div>
+                  <div>
+                    {overview.talentGroups.length ? (
+                      <div className="follower-talent-groups">
+                        {overview.talentGroups.map((group) => (
+                          <section className="follower-talent-cluster" key={group.id}>
+                            <h4>
+                              {group.label}
+                              <span>{group.items.length}</span>
+                            </h4>
+                            <div>
+                              {group.items.map((talent) => (
+                                <span key={`${talent.key}-${talent.label}`}>
+                                  {talent.label} <strong>{talent.count}</strong>
+                                </span>
+                              ))}
+                            </div>
+                          </section>
+                        ))}
+                      </div>
+                    ) : (
+                      <small>ยังไม่มีข้อมูลสกิล</small>
+                    )}
+                  </div>
+                </div>
+                <div>
+                  <span className="follower-insight-title">
+                    <MapPin size={15} /> พื้นที่ที่เข้าถึงได้
+                  </span>
+                  <div>
+                    {overview.areas.length ? (
+                      overview.areas.map(([area, count]) => (
+                        <span key={area}>
+                          {area} <strong>{count}</strong>
+                        </span>
+                      ))
+                    ) : (
+                      <small>เพิ่มพื้นที่ให้ผู้ติดตามเพื่อเตรียมระบบสำรวจ</small>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
-        </div>
-
-        <div className="follower-section-tabs">
-          <button
-            type="button"
-            className={section === "registry" ? "active" : ""}
-            onClick={() => setSection("registry")}
-          >
-            ทะเบียนผู้ติดตาม
-          </button>
-          <button
-            type="button"
-            className={section === "missions" ? "active" : ""}
-            onClick={() => setSection("missions")}
-          >
-            ภารกิจสำรวจ
-          </button>
-          <span>
-            {section === "registry"
-              ? "จัดการเจ้าของ ความสามารถ และพื้นที่เข้าถึง"
-              : "สรุปผล ส่งรางวัล และคืนผู้ติดตามให้ลูกมู"}
-          </span>
-        </div>
+        )}
 
         {section === "missions" ? (
           <FollowerMissionQueue
@@ -462,6 +576,8 @@ export function FollowerManager() {
               await loadFollowers(null, false);
             }}
           />
+        ) : section === "locations" ? (
+          <FollowerLocationManager />
         ) : (
         <div className="follower-workspace">
         <aside className="follower-directory">
@@ -522,6 +638,7 @@ export function FollowerManager() {
           follower={selected}
           busy={busy}
           onAssign={setAssigning}
+          onEdit={setEditing}
           onRelease={handleRelease}
         />
         </div>
@@ -545,6 +662,17 @@ export function FollowerManager() {
           onAssigned={async () => {
             const followerId = assigning.id;
             setAssigning(null);
+            await loadFollowers(followerId);
+          }}
+        />
+      )}
+
+      {editing && (
+        <EditFollowerModal
+          follower={editing}
+          onClose={() => setEditing(null)}
+          onSaved={async (followerId) => {
+            setEditing(null);
             await loadFollowers(followerId);
           }}
         />

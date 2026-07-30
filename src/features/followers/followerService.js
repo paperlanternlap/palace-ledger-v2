@@ -94,12 +94,74 @@ export async function createFollowerWithTalents(values) {
   return followerResult;
 }
 
+export function updateFollowerWithTalents(followerId, values) {
+  return supabase.rpc("update_follower_with_talents", {
+    p_follower_id: followerId,
+    p_name: values.name,
+    p_avatar_url: values.avatarUrl || null,
+    p_follower_type: values.followerType,
+    p_description: values.description || null,
+    p_access_areas: values.accessAreas,
+    p_cost: values.cost,
+    p_weekly_mission_limit: values.weeklyMissionLimit,
+    p_active: values.active,
+    p_talents: values.talents,
+  });
+}
+
 export function getExplorationLocations() {
   return supabase
     .from("exploration_locations")
     .select("*")
     .eq("active", true)
     .order("sort_order", { ascending: true });
+}
+
+export function getAllExplorationLocations() {
+  return supabase
+    .from("exploration_locations")
+    .select("*")
+    .order("sort_order", { ascending: true });
+}
+
+export function createExplorationLocation(values) {
+  return supabase
+    .from("exploration_locations")
+    .insert({
+      code: values.code,
+      zone_number: values.zoneNumber,
+      name: values.name,
+      short_name: values.shortName,
+      category: values.category,
+      summary: values.summary || null,
+      tags: values.tags,
+      base_success_percent: values.baseSuccessPercent,
+      active: values.active,
+      sort_order: values.sortOrder,
+    })
+    .select()
+    .single();
+}
+
+export function updateExplorationLocation(locationId, values) {
+  return supabase
+    .from("exploration_locations")
+    .update({
+      code: values.code,
+      zone_number: values.zoneNumber,
+      name: values.name,
+      short_name: values.shortName,
+      category: values.category,
+      summary: values.summary || null,
+      tags: values.tags,
+      base_success_percent: values.baseSuccessPercent,
+      active: values.active,
+      sort_order: values.sortOrder,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", locationId)
+    .select()
+    .single();
 }
 
 export function getCharactersForFollowerAssignment() {
@@ -160,6 +222,12 @@ export function getFollowerRewardItems() {
     .select("id, name, is_limited, stock_quantity")
     .eq("active", true)
     .order("name", { ascending: true });
+}
+
+export function rollFollowerExploration(missionId) {
+  return supabase.rpc("roll_follower_exploration", {
+    p_mission_id: missionId,
+  });
 }
 
 export function resolveFollowerExploration({

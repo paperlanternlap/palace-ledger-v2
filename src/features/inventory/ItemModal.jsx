@@ -3,6 +3,7 @@ import { PackagePlus, Plus, Settings2, Trash2, X } from "lucide-react";
 import {
   adjustItemStock,
   createCatalogItem,
+  deleteCatalogItem,
   updateCatalogItem,
 } from "./inventoryService";
 
@@ -338,6 +339,7 @@ export function EditItemModal({ item, onClose, onSaved }) {
     normalizeTasks(item.action_template),
   );
   const [submitting, setSubmitting] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState("");
 
   function addTask() {
@@ -391,6 +393,30 @@ export function EditItemModal({ item, onClose, onSaved }) {
         updateError.code === "23505"
           ? "มีไอเท็มชื่อนี้อยู่แล้ว"
           : updateError.message || "บันทึกรายละเอียดไม่สำเร็จ",
+      );
+      return;
+    }
+    onSaved();
+  }
+
+  async function handleDelete() {
+    const confirmed = window.confirm(
+      `ลบ "${item.name}" ออกจากแคตตาล็อกถาวรใช่ไหม\nหากมีประวัติการใช้งาน ระบบจะไม่อนุญาตให้ลบ`,
+    );
+    if (!confirmed) return;
+
+    setDeleting(true);
+    setError("");
+    const { error: deleteError } = await deleteCatalogItem(item.id);
+    setDeleting(false);
+
+    if (deleteError) {
+      setError(
+        deleteError.message?.includes("usage history")
+          ? "ไอเท็มนี้มีประวัติการใช้งานแล้ว กรุณาปิดสถานะใช้งานแทนการลบ"
+          : deleteError.message?.includes("delete_catalog_item")
+            ? "กรุณารัน migration ระบบลบไอเท็มก่อน"
+            : deleteError.message || "ลบไอเท็มไม่สำเร็จ",
       );
       return;
     }
@@ -606,8 +632,18 @@ export function EditItemModal({ item, onClose, onSaved }) {
           <div className="modal-actions">
             <button
               type="button"
+              className="danger-button item-delete-button"
+              disabled={submitting || deleting}
+              onClick={handleDelete}
+            >
+              <Trash2 size={15} />
+              {deleting ? "กำลังลบ..." : "ลบไอเท็ม"}
+            </button>
+            <span className="modal-actions-spacer" />
+            <button
+              type="button"
               className="secondary-button"
-              disabled={submitting}
+              disabled={submitting || deleting}
               onClick={onClose}
             >
               ยกเลิก
@@ -615,7 +651,7 @@ export function EditItemModal({ item, onClose, onSaved }) {
             <button
               type="submit"
               className="primary-button"
-              disabled={submitting || !name.trim()}
+              disabled={submitting || deleting || !name.trim()}
             >
               {submitting ? "กำลังบันทึก..." : "บันทึกรายละเอียด"}
             </button>

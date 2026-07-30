@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
-import { Plus, Trash2, UserPlus, Users, X } from "lucide-react";
+import { Pencil, Plus, Trash2, UserPlus, Users, X } from "lucide-react";
 import {
   assignFollower,
   createFollowerWithTalents,
   getCharactersForFollowerAssignment,
+  getExplorationLocations,
+  updateFollowerWithTalents,
 } from "./followerService";
 
 const followerTypes = [
@@ -38,28 +40,32 @@ const talentOptions = [
   "ความลับ",
 ];
 
-function splitTags(value) {
-  return value
-    .split(",")
-    .map((tag) => tag.trim())
-    .filter(Boolean);
-}
-
 export function CreateFollowerModal({ onClose, onCreated }) {
   const [form, setForm] = useState({
     name: "",
     avatarUrl: "",
     followerType: "maid",
     description: "",
-    accessAreas: "",
+    accessAreas: [],
     cost: 0,
-    weeklyMissionLimit: 1,
+    weeklyMissionLimit: 2,
     talents: [
       { key: "ข่าว", label: "สืบข่าว", modifierPercent: 20 },
     ],
   });
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const [locations, setLocations] = useState([]);
+
+  useEffect(() => {
+    let active = true;
+    getExplorationLocations().then(({ data }) => {
+      if (active) setLocations(data || []);
+    });
+    return () => {
+      active = false;
+    };
+  }, []);
 
   function update(key, value) {
     setForm((current) => ({ ...current, [key]: value }));
@@ -91,6 +97,15 @@ export function CreateFollowerModal({ onClose, onCreated }) {
     }));
   }
 
+  function toggleAccessArea(area) {
+    setForm((current) => ({
+      ...current,
+      accessAreas: current.accessAreas.includes(area)
+        ? current.accessAreas.filter((item) => item !== area)
+        : [...current.accessAreas, area],
+    }));
+  }
+
   async function submit(event) {
     event.preventDefault();
     setSubmitting(true);
@@ -100,7 +115,7 @@ export function CreateFollowerModal({ onClose, onCreated }) {
       name: form.name.trim(),
       avatarUrl: form.avatarUrl.trim(),
       description: form.description.trim(),
-      accessAreas: splitTags(form.accessAreas),
+      accessAreas: form.accessAreas,
       cost: Number(form.cost) || 0,
       weeklyMissionLimit: Number(form.weeklyMissionLimit) || 0,
       talents: form.talents
@@ -207,15 +222,31 @@ export function CreateFollowerModal({ onClose, onCreated }) {
             />
           </label>
 
-          <label>
-            พื้นที่เข้าถึง
-            <input
-              value={form.accessAreas}
-              placeholder="กองโอสถ, ห้องเครื่อง"
-              onChange={(event) => update("accessAreas", event.target.value)}
-            />
-            <small>คั่นแต่ละรายการด้วยเครื่องหมายจุลภาค</small>
-          </label>
+          <fieldset className="follower-location-picker">
+            <legend>พื้นที่ที่ส่งไปสำรวจได้</legend>
+            <small>
+              เลือกจากโลเคชั่นจริง ผู้เล่นจะเห็นเฉพาะพื้นที่ที่กำหนดไว้ตรงนี้
+            </small>
+            {locations.length ? (
+              <div>
+                {locations.map((location) => (
+                  <label key={location.id}>
+                    <input
+                      type="checkbox"
+                      checked={form.accessAreas.includes(location.short_name)}
+                      onChange={() => toggleAccessArea(location.short_name)}
+                    />
+                    <span>
+                      <b>เขต {location.zone_number}</b>
+                      {location.short_name}
+                    </span>
+                  </label>
+                ))}
+              </div>
+            ) : (
+              <p>ยังไม่มีโลเคชั่นสำรวจที่เปิดใช้งาน</p>
+            )}
+          </fieldset>
 
           <fieldset className="follower-talent-editor">
             <div className="follower-talent-heading">
@@ -310,6 +341,316 @@ export function CreateFollowerModal({ onClose, onCreated }) {
               disabled={submitting || !form.name.trim()}
             >
               {submitting ? "กำลังเพิ่ม..." : "เพิ่มเข้าทะเบียน"}
+            </button>
+          </div>
+        </form>
+      </section>
+    </div>
+  );
+}
+
+export function EditFollowerModal({ follower, onClose, onSaved }) {
+  const [form, setForm] = useState({
+    name: follower.name || "",
+    avatarUrl: follower.avatar_url || "",
+    followerType: follower.follower_type || "maid",
+    description: follower.description || "",
+    accessAreas: follower.access_areas || [],
+    cost: follower.cost || 0,
+    weeklyMissionLimit: follower.weekly_mission_limit ?? 2,
+    active: follower.active !== false,
+    talents: (follower.talents || []).map((talent) => ({
+      key: talent.talent_key || "",
+      label: talent.label || talent.talent_key || "",
+      modifierPercent: talent.modifier_percent || 0,
+    })),
+  });
+  const [locations, setLocations] = useState([]);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    let active = true;
+    getExplorationLocations().then(({ data }) => {
+      if (active) setLocations(data || []);
+    });
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  function update(key, value) {
+    setForm((current) => ({ ...current, [key]: value }));
+  }
+
+  function toggleAccessArea(area) {
+    setForm((current) => ({
+      ...current,
+      accessAreas: current.accessAreas.includes(area)
+        ? current.accessAreas.filter((item) => item !== area)
+        : [...current.accessAreas, area],
+    }));
+  }
+
+  function updateTalent(index, key, value) {
+    setForm((current) => ({
+      ...current,
+      talents: current.talents.map((talent, talentIndex) =>
+        talentIndex === index ? { ...talent, [key]: value } : talent,
+      ),
+    }));
+  }
+
+  function addTalent() {
+    setForm((current) => ({
+      ...current,
+      talents: [
+        ...current.talents,
+        { key: "ข่าว", label: "ความถนัด", modifierPercent: 10 },
+      ],
+    }));
+  }
+
+  function removeTalent(index) {
+    setForm((current) => ({
+      ...current,
+      talents: current.talents.filter((_, talentIndex) => talentIndex !== index),
+    }));
+  }
+
+  async function submit(event) {
+    event.preventDefault();
+    setSubmitting(true);
+    setError("");
+    const cleanTalents = form.talents
+      .map((talent) => ({
+        key: talent.key.trim(),
+        label: talent.label.trim() || talent.key.trim(),
+        modifierPercent: Number(talent.modifierPercent) || 0,
+      }))
+      .filter(
+        (talent, index, talents) =>
+          talent.key &&
+          talents.findIndex((item) => item.key === talent.key) === index,
+      );
+    const { error: updateError } = await updateFollowerWithTalents(
+      follower.id,
+      {
+        ...form,
+        name: form.name.trim(),
+        avatarUrl: form.avatarUrl.trim(),
+        description: form.description.trim(),
+        cost: Number(form.cost) || 0,
+        weeklyMissionLimit: Number(form.weeklyMissionLimit) || 0,
+        talents: cleanTalents,
+      },
+    );
+    setSubmitting(false);
+
+    if (updateError) {
+      setError(
+        updateError.code === "23505"
+          ? "ชื่อหรือ Talent ซ้ำกับข้อมูลที่มีอยู่"
+          : updateError.message?.includes("update_follower_with_talents")
+            ? "กรุณารัน migration ระบบแก้ไขผู้ติดตามก่อน"
+            : updateError.message || "บันทึกผู้ติดตามไม่สำเร็จ",
+      );
+      return;
+    }
+    onSaved(follower.id);
+  }
+
+  return (
+    <div className="modal-backdrop" role="presentation" onMouseDown={onClose}>
+      <section
+        className="follower-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="edit-follower-title"
+        onMouseDown={(event) => event.stopPropagation()}
+      >
+        <button type="button" className="modal-close" onClick={onClose}>
+          <X size={20} />
+        </button>
+        <div className="follower-modal-icon">
+          <Pencil size={20} />
+        </div>
+        <h2 id="edit-follower-title">แก้ไขผู้ติดตาม · {follower.name}</h2>
+        <p>ปรับข้อมูล ความถนัด พื้นที่สำรวจ และโควตาการใช้งาน</p>
+
+        <form onSubmit={submit}>
+          <div className="follower-form-grid">
+            <label>
+              ชื่อผู้ติดตาม
+              <input
+                required
+                value={form.name}
+                onChange={(event) => update("name", event.target.value)}
+              />
+            </label>
+            <label>
+              ประเภท
+              <select
+                value={form.followerType}
+                onChange={(event) => update("followerType", event.target.value)}
+              >
+                {followerTypes.map((type) => (
+                  <option key={type.value} value={type.value}>
+                    {type.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
+
+          <div className="follower-form-grid">
+            <label>
+              ราคาแต้ม
+              <input
+                type="number"
+                min="0"
+                value={form.cost}
+                onChange={(event) => update("cost", event.target.value)}
+              />
+            </label>
+            <label>
+              ภารกิจต่อสัปดาห์
+              <input
+                type="number"
+                min="0"
+                value={form.weeklyMissionLimit}
+                onChange={(event) =>
+                  update("weeklyMissionLimit", event.target.value)
+                }
+              />
+            </label>
+          </div>
+
+          <label>
+            รูปภาพ
+            <input
+              type="url"
+              value={form.avatarUrl}
+              placeholder="https://..."
+              onChange={(event) => update("avatarUrl", event.target.value)}
+            />
+          </label>
+
+          <label>
+            คำอธิบาย
+            <textarea
+              rows="2"
+              value={form.description}
+              onChange={(event) => update("description", event.target.value)}
+            />
+          </label>
+
+          <fieldset className="follower-location-picker">
+            <legend>พื้นที่ที่ส่งไปสำรวจได้</legend>
+            <small>เลือกได้หลายพื้นที่จากโลเคชั่นที่เปิดใช้งาน</small>
+            <div>
+              {locations.map((location) => (
+                <label key={location.id}>
+                  <input
+                    type="checkbox"
+                    checked={form.accessAreas.includes(location.short_name)}
+                    onChange={() => toggleAccessArea(location.short_name)}
+                  />
+                  <span>
+                    <b>เขต {location.zone_number}</b>
+                    {location.short_name}
+                  </span>
+                </label>
+              ))}
+            </div>
+          </fieldset>
+
+          <fieldset className="follower-talent-editor">
+            <div className="follower-talent-heading">
+              <div>
+                <strong>Talent สำหรับสำรวจ</strong>
+                <small>เปอร์เซ็นต์บวกหรือลบเมื่อ tag ตรงกับพื้นที่</small>
+              </div>
+              <button type="button" onClick={addTalent}>
+                <Plus size={13} /> เพิ่ม Talent
+              </button>
+            </div>
+            {form.talents.map((talent, index) => (
+              <div className="follower-talent-row" key={`${index}-${talent.key}`}>
+                <label>
+                  Tag
+                  <input
+                    list="edit-follower-talent-options"
+                    value={talent.key}
+                    onChange={(event) =>
+                      updateTalent(index, "key", event.target.value)
+                    }
+                  />
+                </label>
+                <label>
+                  ชื่อที่แสดง
+                  <input
+                    value={talent.label}
+                    onChange={(event) =>
+                      updateTalent(index, "label", event.target.value)
+                    }
+                  />
+                </label>
+                <label>
+                  ผลต่อโอกาส
+                  <div className="talent-percent-input">
+                    <input
+                      type="number"
+                      min="-100"
+                      max="100"
+                      value={talent.modifierPercent}
+                      onChange={(event) =>
+                        updateTalent(index, "modifierPercent", event.target.value)
+                      }
+                    />
+                    <span>%</span>
+                  </div>
+                </label>
+                <button
+                  type="button"
+                  className="talent-remove"
+                  aria-label="ลบ Talent"
+                  onClick={() => removeTalent(index)}
+                >
+                  <Trash2 size={15} />
+                </button>
+              </div>
+            ))}
+            <datalist id="edit-follower-talent-options">
+              {talentOptions.map((option) => (
+                <option key={option} value={option} />
+              ))}
+            </datalist>
+          </fieldset>
+
+          <label className="stock-toggle">
+            <input
+              type="checkbox"
+              checked={form.active}
+              onChange={(event) => update("active", event.target.checked)}
+            />
+            <span>
+              <strong>เปิดให้ใช้งาน</strong>
+              <small>ปิดเพื่อซ่อนผู้ติดตามโดยไม่ลบประวัติ</small>
+            </span>
+          </label>
+
+          {error && <p className="follower-form-error">{error}</p>}
+          <div className="modal-actions">
+            <button type="button" className="secondary-button" onClick={onClose}>
+              ยกเลิก
+            </button>
+            <button
+              type="submit"
+              className="primary-button"
+              disabled={submitting || !form.name.trim()}
+            >
+              {submitting ? "กำลังบันทึก..." : "บันทึกผู้ติดตาม"}
             </button>
           </div>
         </form>

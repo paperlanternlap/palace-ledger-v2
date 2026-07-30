@@ -44,6 +44,12 @@ export function adjustItemStock(itemId, quantityChange, note) {
   });
 }
 
+export function deleteCatalogItem(itemId) {
+  return supabase.rpc("delete_catalog_item", {
+    p_item_id: itemId,
+  });
+}
+
 export async function updateCatalogItem({
   id,
   name,
