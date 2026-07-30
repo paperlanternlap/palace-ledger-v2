@@ -11,6 +11,7 @@ import './styles/followers.css'
 import './styles/rp-queue.css'
 import './styles/overview.css'
 import './styles/overlays.css'
+import './styles/responsive.css'
 import App from './App.jsx'
 
 createRoot(document.getElementById('root')).render(
