@@ -6,7 +6,6 @@ import {
   PackageOpen,
 } from "lucide-react";
 import { EmptyState } from "../../components/ui/EmptyState";
-import { StatusBadge } from "./StatusBadge";
 import { formatNumber } from "./utils";
 
 function Inventory({ items, loading }) {
@@ -133,7 +132,6 @@ export function CharacterDetail({
         <div className="profile-title">
           <div className="profile-name">
             <h2>{character.character_name || "ยังไม่มีชื่อ"}</h2>
-            <StatusBadge status={character.status} />
           </div>
           <p>{character.role || "ยังไม่ระบุบทบาท"}</p>
           <div className="profile-meta flex flex-wrap items-center gap-x-4 gap-y-1">

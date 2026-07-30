@@ -7,6 +7,24 @@ export async function getCharacters() {
     .order("character_name", { ascending: true });
 }
 
+export function createCharacter(values) {
+  return supabase
+    .from("characters")
+    .insert({
+      character_name: values.characterName.trim(),
+      player_name: values.playerName.trim(),
+      username: values.username.trim(),
+      position: values.position.trim() || null,
+      palace: values.palace.trim() || null,
+      role: values.role.trim() || null,
+      avatar_url: values.avatarUrl.trim() || null,
+      rp: 0,
+      favor: 0,
+    })
+    .select("*")
+    .single();
+}
+
 export async function getCharacterDetails(characterId) {
   const [inventory, history] = await Promise.all([
     supabase

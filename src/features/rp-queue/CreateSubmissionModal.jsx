@@ -6,8 +6,9 @@ import {
 } from "./rpQueueService";
 
 const submissionTypes = [
-  "โรลทั่วไป",
-  "โรลอีเวนต์",
+  "โรลเพลย์",
+  "เข้าร่วมกิจกรรม",
+  "งานวาด / งานสร้างสรรค์",
   "ภารกิจ",
   "สำรวจ",
   "อื่น ๆ",
@@ -17,7 +18,7 @@ export function CreateSubmissionModal({ onClose, onCreated }) {
   const [characters, setCharacters] = useState([]);
   const [characterId, setCharacterId] = useState("");
   const [roleUrl, setRoleUrl] = useState("");
-  const [submissionType, setSubmissionType] = useState("โรลทั่วไป");
+  const [submissionType, setSubmissionType] = useState("โรลเพลย์");
   const [participantNames, setParticipantNames] = useState("");
   const [playerNote, setPlayerNote] = useState("");
   const [loadingCharacters, setLoadingCharacters] = useState(true);
@@ -45,7 +46,7 @@ export function CreateSubmissionModal({ onClose, onCreated }) {
       const parsedUrl = new URL(roleUrl);
       if (!["http:", "https:"].includes(parsedUrl.protocol)) throw new Error();
     } catch {
-      setError("กรุณาใส่ลิงก์โรลที่ขึ้นต้นด้วย http:// หรือ https://");
+      setError("กรุณาใส่ลิงก์ผลงานหรือหลักฐานที่ขึ้นต้นด้วย http:// หรือ https://");
       return;
     }
 
@@ -63,7 +64,7 @@ export function CreateSubmissionModal({ onClose, onCreated }) {
       setError(
         createError.code === "23505"
           ? "ลิงก์นี้ถูกส่งเข้าระบบแล้ว"
-          : createError.message || "เพิ่มโรลเข้าคิวไม่สำเร็จ",
+          : createError.message || "เพิ่มผลงานเข้าคิวไม่สำเร็จ",
       );
       return;
     }
@@ -91,8 +92,8 @@ export function CreateSubmissionModal({ onClose, onCreated }) {
         <div className="submission-modal-icon">
           <Link2 size={20} />
         </div>
-        <h2 id="create-submission-title">เพิ่มโรลเข้าคิว</h2>
-        <p>ใช้สำหรับบันทึกรายการแทนลูกมูหรือทดสอบขั้นตอนตรวจโรล</p>
+        <h2 id="create-submission-title">เพิ่มผลงานเข้าคิว</h2>
+        <p>ใช้สำหรับบันทึกผลงานหรือหลักฐานการเข้าร่วมแทนผู้เล่น</p>
 
         <form onSubmit={handleSubmit}>
           <div className="submission-form-grid">
@@ -116,7 +117,7 @@ export function CreateSubmissionModal({ onClose, onCreated }) {
             </label>
 
             <label>
-              ประเภทโรล
+              ประเภทผลงาน
               <select
                 value={submissionType}
                 onChange={(event) => setSubmissionType(event.target.value)}
@@ -129,7 +130,7 @@ export function CreateSubmissionModal({ onClose, onCreated }) {
           </div>
 
           <label>
-            ลิงก์โรล
+            ลิงก์ผลงานหรือหลักฐาน
             <input
               type="url"
               required
@@ -140,10 +141,10 @@ export function CreateSubmissionModal({ onClose, onCreated }) {
           </label>
 
           <label>
-            ผู้ร่วมโรล
+            ผู้ร่วมงาน
             <input
               value={participantNames}
-              placeholder="ชื่อผู้ร่วมโรล คั่นด้วยเครื่องหมายจุลภาค"
+              placeholder="ชื่อผู้ร่วมงานหรือผู้ร่วมกิจกรรม คั่นด้วยเครื่องหมายจุลภาค"
               onChange={(event) => setParticipantNames(event.target.value)}
             />
           </label>

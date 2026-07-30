@@ -1,25 +1,32 @@
 import {
-  Activity,
   ClipboardList,
+  Compass,
   FileText,
   Gift,
   Home,
+  LogOut,
   ScrollText,
   UserRoundCheck,
   Users,
 } from "lucide-react";
 
 const navItems = [
-  { id: "dashboard", label: "ภาพรวม", icon: Home, disabled: true },
+  { id: "dashboard", label: "ภาพรวม", icon: Home },
   { id: "characters", label: "ตัวละคร", icon: Users },
-  { id: "rp-queue", label: "คิวตรวจโรล", icon: ScrollText },
+  { id: "rp-queue", label: "คิวตรวจผลงาน", icon: ScrollText },
   { id: "item-requests", label: "คำร้อง", icon: ClipboardList },
+  { id: "exploration-missions", label: "ภารกิจสำรวจ", icon: Compass },
   { id: "inventory", label: "คลังไอเท็ม", icon: Gift },
   { id: "followers", label: "ผู้ติดตาม", icon: UserRoundCheck },
   { label: "ประวัติ", icon: FileText, disabled: true },
 ];
 
-export function Sidebar({ activePage, onNavigate }) {
+export function Sidebar({
+  activePage,
+  onNavigate,
+  onSignOut,
+  loggingOut,
+}) {
   return (
     <aside className="sidebar">
       <div className="brand">
@@ -48,8 +55,10 @@ export function Sidebar({ activePage, onNavigate }) {
       </nav>
 
       <div className="sidebar-foot">
-        <Activity size={16} />
-        <span>Staff workspace</span>
+        <button type="button" onClick={onSignOut} disabled={loggingOut}>
+          <LogOut size={16} />
+          <span>{loggingOut ? "กำลังออก..." : "ออกจากระบบ"}</span>
+        </button>
       </div>
     </aside>
   );

@@ -1,0 +1,223 @@
+.staff-overview {
+  min-height: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 4px 0;
+}
+
+.overview-welcome {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 26px 28px;
+  border: 1px solid #dccbb8;
+  border-radius: 18px;
+  color: #fffaf3;
+  background:
+    radial-gradient(circle at 86% 20%, rgb(224 190 126 / 18%), transparent 17rem),
+    linear-gradient(125deg, #5e2421, #81332e);
+  box-shadow: 0 18px 42px rgb(64 37 27 / 14%);
+}
+
+.overview-welcome span {
+  color: #e8c98e;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1.2px;
+}
+
+.overview-welcome h2 {
+  margin: 4px 0 0;
+  font: 700 29px "Noto Serif Thai", Georgia, serif;
+}
+
+.overview-welcome p {
+  margin: 4px 0 0;
+  color: #eaded4;
+  font-size: 13px;
+}
+
+.overview-welcome button {
+  min-height: 38px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 0 14px;
+  border: 1px solid rgb(255 247 235 / 28%);
+  border-radius: 9px;
+  color: white;
+  background: rgb(255 255 255 / 10%);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.overview-welcome button:hover:not(:disabled) {
+  background: rgb(255 255 255 / 17%);
+}
+
+.overview-queue-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.overview-queue-card {
+  min-width: 0;
+  min-height: 112px;
+  display: grid;
+  grid-template-columns: 46px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 13px;
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: 15px;
+  color: var(--ink);
+  background: var(--paper);
+  box-shadow:
+    0 3px 0 #e2d3c2,
+    0 12px 28px rgb(68 51 37 / 9%);
+  text-align: left;
+  transition:
+    transform 150ms ease,
+    border-color 150ms ease,
+    box-shadow 150ms ease,
+    background 150ms ease;
+}
+
+.overview-queue-card:hover {
+  border-color: #caa99d;
+  background: #fffaf6;
+  box-shadow:
+    0 4px 0 #d8bdb1,
+    0 16px 32px rgb(68 51 37 / 13%);
+  transform: translateY(-2px);
+}
+
+.overview-queue-card:active {
+  box-shadow:
+    0 1px 0 #d8bdb1,
+    0 6px 14px rgb(68 51 37 / 9%);
+  transform: translateY(1px);
+}
+
+.overview-queue-icon {
+  width: 46px;
+  height: 46px;
+  display: grid;
+  place-items: center;
+  border-radius: 12px;
+  color: var(--wine);
+  background: var(--wine-soft);
+}
+
+.overview-queue-copy {
+  min-width: 0;
+  display: flex;
+  flex-direction: column-reverse;
+  gap: 3px;
+}
+
+.overview-queue-copy strong {
+  font: 700 18px "Noto Serif Thai", Georgia, serif;
+}
+
+.overview-queue-copy small {
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 11px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.overview-queue-action {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 3px;
+}
+
+.overview-queue-action b {
+  min-width: 44px;
+  color: var(--wine);
+  font: 700 30px "Noto Serif Thai", Georgia, serif;
+  text-align: right;
+}
+
+.overview-queue-action small {
+  color: var(--wine);
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: .2px;
+}
+
+.overview-shortcuts {
+  padding: 18px 20px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: rgb(255 253 248 / 70%);
+}
+
+.overview-shortcuts h3 {
+  margin: 0 0 10px;
+  font-size: 13px;
+}
+
+.overview-shortcuts > div {
+  display: flex;
+  gap: 8px;
+}
+
+.overview-shortcuts button {
+  min-height: 36px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--wine);
+  background: white;
+  box-shadow:
+    0 2px 0 #e2d3c2,
+    0 7px 16px rgb(68 51 37 / 7%);
+  font-size: 11px;
+  font-weight: 700;
+  transition:
+    transform 140ms ease,
+    border-color 140ms ease,
+    box-shadow 140ms ease;
+}
+
+.overview-shortcuts button:hover {
+  border-color: #caa99d;
+  box-shadow:
+    0 3px 0 #d8bdb1,
+    0 10px 20px rgb(68 51 37 / 10%);
+  transform: translateY(-1px);
+}
+
+.overview-shortcuts button:active {
+  box-shadow: 0 1px 0 #d8bdb1;
+  transform: translateY(1px);
+}
+
+.overview-error {
+  margin: 0;
+  color: #9b3c36;
+  font-size: 11px;
+}
+
+@media (max-width: 820px) {
+  .overview-queue-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (min-width: 821px) and (max-width: 1180px) {
+  .overview-queue-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

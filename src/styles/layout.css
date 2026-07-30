@@ -122,6 +122,26 @@
   font-size: 12px;
 }
 
+.sidebar-foot button {
+  width: 100%;
+  min-height: 40px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 8px;
+  color: rgb(248 241 230 / 62%);
+  background: transparent;
+  font: inherit;
+  text-align: left;
+}
+
+.sidebar-foot button:hover:not(:disabled) {
+  color: #fffaf1;
+  background: rgb(255 255 255 / 10%);
+}
+
 .main-content {
   min-width: 0;
   min-height: 0;
@@ -147,6 +167,12 @@
 .page-header h1 {
   margin: 0;
   font: 700 19px "Noto Serif Thai", serif;
+}
+
+.page-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .workspace {

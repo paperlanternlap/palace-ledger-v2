@@ -21,7 +21,7 @@ export function CharacterList({
       <div className="list-empty">
         <Search size={22} />
         <strong>ไม่พบตัวละคร</strong>
-        <span>ลองเปลี่ยนคำค้นหาหรือสถานะ</span>
+        <span>ลองเปลี่ยนคำค้นหา หรือเพิ่มตัวละครใหม่</span>
       </div>
     );
   }
@@ -50,7 +50,11 @@ export function CharacterList({
           )}
           <span className="character-summary">
             <strong>{character.character_name || "ยังไม่มีชื่อ"}</strong>
-            <span>{character.player_name || "ไม่ระบุผู้เล่น"}</span>
+            <span>
+              {[character.role, character.position].filter(Boolean).join(" · ") ||
+                character.player_name ||
+                "ยังไม่ระบุประเภทและตำแหน่ง"}
+            </span>
           </span>
           <ChevronRight size={17} className="row-chevron" />
         </button>

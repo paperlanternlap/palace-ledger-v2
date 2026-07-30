@@ -1,0 +1,137 @@
+import { useCallback, useEffect, useMemo, useState } from "react";
+import {
+  ClipboardList,
+  Compass,
+  RefreshCw,
+  ScrollText,
+} from "lucide-react";
+import { supabase } from "../../supabase";
+
+const workQueues = [
+  {
+    id: "rp-queue",
+    label: "ผลงานรอตรวจ",
+    description: "ตรวจลิงก์ผลงานและบันทึกคะแนน",
+    icon: ScrollText,
+  },
+  {
+    id: "item-requests",
+    label: "คำร้องที่ต้องทำ",
+    description: "ตรวจการใช้ไอเท็มและงานของแม่งาน",
+    icon: ClipboardList,
+  },
+  {
+    id: "exploration-missions",
+    label: "ภารกิจรอตอบ",
+    description: "สุ่มผล สรุปเหตุการณ์ และมอบรางวัล",
+    icon: Compass,
+  },
+];
+
+export function StaffOverview({ onNavigate }) {
+  const [counts, setCounts] = useState({});
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  const loadCounts = useCallback(async () => {
+    setLoading(true);
+    setError("");
+    const [submissions, requests, missions] = await Promise.all([
+      supabase.from("rp_submissions").select("status").limit(500),
+      supabase.from("item_use_requests").select("status").limit(500),
+      supabase
+        .from("follower_explorations")
+        .select("id", { count: "exact", head: true })
+        .eq("status", "exploring"),
+    ]);
+
+    const results = [submissions, requests, missions];
+    if (results.some((result) => result.error)) {
+      setError("โหลดจำนวนงานบางส่วนไม่สำเร็จ");
+    }
+
+    setCounts({
+      "rp-queue": (submissions.data || []).filter(
+        (item) => item.status === "pending" || item.status === "revision",
+      ).length,
+      "item-requests": (requests.data || []).filter(
+        (item) =>
+          !["completed", "rejected", "cancelled"].includes(item.status),
+      ).length,
+      "exploration-missions": missions.count || 0,
+    });
+    setLoading(false);
+  }, []);
+
+  useEffect(() => {
+    const timer = window.setTimeout(loadCounts, 0);
+    return () => window.clearTimeout(timer);
+  }, [loadCounts]);
+
+  const totalWork = useMemo(
+    () => Object.values(counts).reduce((sum, count) => sum + count, 0),
+    [counts],
+  );
+
+  return (
+    <section className="staff-overview">
+      <div className="overview-welcome">
+        <div>
+          <span>STAFF WORKSPACE</span>
+          <h2>เริ่มงานจากตรงนี้</h2>
+          <p>
+            {loading
+              ? "กำลังตรวจสอบงานที่รออยู่..."
+              : totalWork
+                ? `มี ${totalWork} งานที่ต้องจัดการ`
+                : "ไม่มีงานค้างในตอนนี้"}
+          </p>
+        </div>
+        <button type="button" onClick={loadCounts} disabled={loading}>
+          <RefreshCw size={15} className={loading ? "spinning" : ""} />
+          อัปเดต
+        </button>
+      </div>
+
+      {error && <p className="overview-error">{error}</p>}
+
+      <div className="overview-queue-grid">
+        {workQueues.map(({ id, label, description, icon: Icon }) => (
+          <button
+            type="button"
+            className="overview-queue-card"
+            key={id}
+            onClick={() => onNavigate(id)}
+          >
+            <span className="overview-queue-icon">
+              <Icon size={21} />
+            </span>
+            <span className="overview-queue-copy">
+              <small>{description}</small>
+              <strong>{label}</strong>
+            </span>
+            <span className="overview-queue-action">
+              <b>{loading ? "…" : counts[id] || 0}</b>
+              <small>เปิดคิว</small>
+            </span>
+          </button>
+        ))}
+      </div>
+
+      <div className="overview-shortcuts">
+        <h3>งานจัดการระบบ</h3>
+        <div>
+          <button type="button" onClick={() => onNavigate("characters")}>
+            จัดการตัวละคร
+          </button>
+          <button type="button" onClick={() => onNavigate("inventory")}>
+            คลังไอเท็ม
+          </button>
+          <button type="button" onClick={() => onNavigate("followers")}>
+            จัดการผู้ติดตาม
+          </button>
+        </div>
+      </div>
+    </section>
+  );
+}

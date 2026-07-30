@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { CheckCircle2, Compass, Package, Sparkles, XCircle } from "lucide-react";
+import { ListPagination } from "../../components/ui/ListPagination";
+import { useListPagination } from "../../components/ui/useListPagination";
 import {
   cancelFollowerExploration,
   getFollowerExplorations,
@@ -31,6 +33,7 @@ function missionLocationName(mission) {
 
 export function FollowerMissionQueue({ onMissionChanged }) {
   const [missions, setMissions] = useState([]);
+  const [statusFilter, setStatusFilter] = useState("exploring");
   const [items, setItems] = useState([]);
   const [selectedId, setSelectedId] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -86,9 +89,33 @@ export function FollowerMissionQueue({ onMissionChanged }) {
     return () => window.clearTimeout(timer);
   }, []);
 
+  const statusCounts = useMemo(
+    () => ({
+      all: missions.length,
+      exploring: missions.filter((mission) => mission.status === "exploring").length,
+      completed: missions.filter((mission) => mission.status === "completed").length,
+      cancelled: missions.filter((mission) => mission.status === "cancelled").length,
+    }),
+    [missions],
+  );
+  const filteredMissions = useMemo(
+    () =>
+      statusFilter === "all"
+        ? missions
+        : missions.filter((mission) => mission.status === statusFilter),
+    [missions, statusFilter],
+  );
+  const missionPages = useListPagination(
+    filteredMissions,
+    8,
+    statusFilter,
+  );
   const selected = useMemo(
-    () => missions.find((mission) => mission.id === selectedId) || null,
-    [missions, selectedId],
+    () =>
+      missionPages.pageItems.find((mission) => mission.id === selectedId) ||
+      missionPages.pageItems[0] ||
+      null,
+    [missionPages.pageItems, selectedId],
   );
   const hasRolled =
     selected?.resolution_roll != null &&
@@ -188,15 +215,33 @@ export function FollowerMissionQueue({ onMissionChanged }) {
           </div>
           <small>{missions.length} ภารกิจทั้งหมด</small>
         </header>
+        <div className="mission-filters" aria-label="กรองสถานะภารกิจ">
+          {[
+            ["exploring", "รอตอบ"],
+            ["completed", "สรุปแล้ว"],
+            ["cancelled", "ยกเลิก"],
+            ["all", "ทั้งหมด"],
+          ].map(([value, label]) => (
+            <button
+              type="button"
+              key={value}
+              className={statusFilter === value ? "active" : ""}
+              onClick={() => setStatusFilter(value)}
+            >
+              <span>{label}</span>
+              <small>{statusCounts[value]}</small>
+            </button>
+          ))}
+        </div>
         <div className="mission-list">
           {loading ? (
             <p>กำลังโหลดภารกิจ...</p>
-          ) : missions.length ? (
-            missions.map((mission) => (
+          ) : filteredMissions.length ? (
+            missionPages.pageItems.map((mission) => (
               <button
                 type="button"
                 key={mission.id}
-                className={selectedId === mission.id ? "selected" : ""}
+                className={selected?.id === mission.id ? "selected" : ""}
                 onClick={() => selectMission(mission)}
               >
                 <Compass size={17} />
@@ -212,11 +257,21 @@ export function FollowerMissionQueue({ onMissionChanged }) {
           ) : (
             <div className="mission-empty">
               <CheckCircle2 size={25} />
-              <strong>ไม่มีภารกิจรอผล</strong>
-              <span>เมื่อลูกมูส่งผู้ติดตาม รายการจะขึ้นที่นี่</span>
+              <strong>ไม่มีรายการในสถานะนี้</strong>
+              <span>
+                {statusFilter === "exploring"
+                  ? "เมื่อผู้เล่นส่งผู้ติดตามสำรวจ งานที่รอตอบจะขึ้นที่นี่"
+                  : "ลองเลือกดูสถานะอื่น"}
+              </span>
             </div>
           )}
         </div>
+        <ListPagination
+          currentPage={missionPages.currentPage}
+          totalPages={missionPages.totalPages}
+          onPageChange={missionPages.setPage}
+          label="หน้ารายการภารกิจสำรวจ"
+        />
       </aside>
 
       <section className="mission-resolution">

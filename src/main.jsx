@@ -9,6 +9,7 @@ import './styles/inventory.css'
 import './styles/item-requests.css'
 import './styles/followers.css'
 import './styles/rp-queue.css'
+import './styles/overview.css'
 import './styles/overlays.css'
 import App from './App.jsx'
 

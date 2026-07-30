@@ -5,6 +5,7 @@ import { AdjustmentModal } from "./features/characters/AdjustmentModal";
 import { CharacterDetail } from "./features/characters/CharacterDetail";
 import { CharacterDirectory } from "./features/characters/CharacterDirectory";
 import { GrantItemModal } from "./features/characters/GrantItemModal";
+import { CreateCharacterModal } from "./features/characters/CreateCharacterModal";
 import {
   addHistory,
   getCharacterDetails,
@@ -18,22 +19,32 @@ import {
 import { InventoryManager } from "./features/inventory/InventoryManager";
 import { ItemRequestQueue } from "./features/item-requests/ItemRequestQueue";
 import { FollowerManager } from "./features/followers/FollowerManager";
+import { FollowerMissionQueue } from "./features/followers/FollowerMissionQueue";
 import { RpQueue } from "./features/rp-queue/RpQueue";
+import { StaffOverview } from "./features/overview/StaffOverview";
+import { signOut } from "./features/auth/authService";
+import {
+  CHARACTER_ROLE_OPTIONS,
+  getPositionOptions,
+} from "./features/characters/rankOptions";
 
 function StaffApp() {
-  const [activePage, setActivePage] = useState("characters");
+  const [activePage, setActivePage] = useState("dashboard");
   const [characters, setCharacters] = useState([]);
   const [selectedCharacter, setSelectedCharacter] = useState(null);
   const [inventory, setInventory] = useState([]);
   const [history, setHistory] = useState([]);
-  const [selectedStatus, setSelectedStatus] = useState("ทั้งหมด");
   const [search, setSearch] = useState("");
+  const [roleFilter, setRoleFilter] = useState("all");
+  const [positionFilter, setPositionFilter] = useState("all");
   const [loading, setLoading] = useState(true);
   const [detailLoading, setDetailLoading] = useState(false);
   const [adjustmentType, setAdjustmentType] = useState(null);
   const [showGrantItem, setShowGrantItem] = useState(false);
+  const [showCreateCharacter, setShowCreateCharacter] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [notice, setNotice] = useState(null);
+  const [loggingOut, setLoggingOut] = useState(false);
 
   useEffect(() => {
     if (!notice) return undefined;
@@ -124,49 +135,85 @@ function StaffApp() {
   }
 
   const filteredCharacters = useMemo(
-    () => filterCharacters(characters, selectedStatus, search),
-    [characters, search, selectedStatus],
+    () => filterCharacters(characters, search, roleFilter, positionFilter),
+    [characters, positionFilter, roleFilter, search],
+  );
+  const characterRoleOptions = useMemo(
+    () => [
+      ...new Set([
+        ...CHARACTER_ROLE_OPTIONS,
+        ...characters.map((character) => character.role).filter(Boolean),
+      ]),
+    ],
+    [characters],
+  );
+  const characterPositionOptions = useMemo(
+    () => getPositionOptions(roleFilter, characters),
+    [characters, roleFilter],
   );
 
   return (
     <div className="app-shell h-screen min-h-0 overflow-hidden">
-      <Sidebar activePage={activePage} onNavigate={setActivePage} />
+      <Sidebar
+        activePage={activePage}
+        onNavigate={setActivePage}
+        loggingOut={loggingOut}
+        onSignOut={async () => {
+          setLoggingOut(true);
+          await signOut();
+        }}
+      />
 
       <main className="main-content flex h-screen min-h-0 flex-col overflow-hidden">
         <header className="page-header flex h-9 shrink-0 items-center justify-between">
           <h1 className="!text-lg !leading-none">
-            {activePage === "characters"
+            {activePage === "dashboard"
+              ? "ภาพรวมงาน"
+              : activePage === "characters"
               ? "จัดการตัวละคร"
               : activePage === "rp-queue"
-                ? "คิวตรวจโรล"
+                ? "คิวตรวจผลงาน"
                 : activePage === "item-requests"
                   ? "คำร้องและงานแม่งาน"
                   : activePage === "followers"
                     ? "จัดการผู้ติดตาม"
+                    : activePage === "exploration-missions"
+                      ? "ภารกิจสำรวจ"
                     : "คลังไอเท็ม"}
           </h1>
-          {activePage === "characters" && (
-            <button
-              type="button"
-              className="primary-button !min-h-8 !px-3 !text-xs"
-              disabled
-            >
-              + เพิ่มตัวละคร
-            </button>
-          )}
+          <div className="page-header-actions">
+            {activePage === "characters" && (
+              <button
+                type="button"
+                className="primary-button !min-h-8 !px-3 !text-xs"
+                onClick={() => setShowCreateCharacter(true)}
+              >
+                + เพิ่มตัวละคร
+              </button>
+            )}
+          </div>
         </header>
 
-        {activePage === "characters" ? (
+        {activePage === "dashboard" ? (
+          <StaffOverview onNavigate={setActivePage} />
+        ) : activePage === "characters" ? (
           <section className="workspace min-h-0 flex-1">
             <CharacterDirectory
               characters={filteredCharacters}
               selectedId={selectedCharacter?.id}
-              selectedStatus={selectedStatus}
               search={search}
+              roleFilter={roleFilter}
+              positionFilter={positionFilter}
+              roleOptions={characterRoleOptions}
+              positionOptions={characterPositionOptions}
               loading={loading}
               onSelect={selectCharacter}
-              onStatusChange={setSelectedStatus}
               onSearchChange={setSearch}
+              onRoleFilterChange={(role) => {
+                setRoleFilter(role);
+                setPositionFilter("all");
+              }}
+              onPositionFilterChange={setPositionFilter}
             />
             <CharacterDetail
               character={selectedCharacter}
@@ -181,6 +228,8 @@ function StaffApp() {
           <RpQueue />
         ) : activePage === "item-requests" ? (
           <ItemRequestQueue />
+        ) : activePage === "exploration-missions" ? (
+          <FollowerMissionQueue />
         ) : activePage === "followers" ? (
           <FollowerManager />
         ) : (
@@ -195,6 +244,21 @@ function StaffApp() {
           submitting={submitting}
           onClose={() => setAdjustmentType(null)}
           onSubmit={submitAdjustment}
+        />
+      )}
+
+      {showCreateCharacter && (
+        <CreateCharacterModal
+          onClose={() => setShowCreateCharacter(false)}
+          onCreated={async (character) => {
+            setShowCreateCharacter(false);
+            await loadCharacters(character.id);
+            await selectCharacter(character);
+            setNotice({
+              type: "success",
+              message: `เพิ่ม ${character.character_name} เข้าระบบแล้ว`,
+            });
+          }}
         />
       )}
 

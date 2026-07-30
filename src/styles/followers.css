@@ -286,6 +286,53 @@
   border-bottom: 1px solid var(--line);
 }
 
+.mission-filters {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 4px;
+  padding: 8px;
+  border-bottom: 1px solid var(--line);
+  background: #faf6ef;
+}
+
+.mission-filters button {
+  min-width: 0;
+  min-height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 0 6px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  color: var(--muted);
+  background: transparent;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.mission-filters button:hover {
+  color: var(--wine);
+  background: white;
+}
+
+.mission-filters button.active {
+  border-color: #dfc9b5;
+  color: var(--wine);
+  background: white;
+  box-shadow: 0 3px 10px rgb(72 47 31 / 6%);
+}
+
+.mission-filters small {
+  min-width: 18px;
+  padding: 2px 5px;
+  border-radius: 99px;
+  color: inherit;
+  background: #eee5da;
+  font-size: 9px;
+  line-height: 1.2;
+}
+
 .mission-directory > header > div {
   display: flex;
   align-items: baseline;

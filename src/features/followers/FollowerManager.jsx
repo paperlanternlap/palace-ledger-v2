@@ -25,7 +25,6 @@ import {
   getFollowers,
   releaseFollower,
 } from "./followerService";
-import { FollowerMissionQueue } from "./FollowerMissionQueue";
 import { FollowerLocationManager } from "./FollowerLocationManager";
 
 const statusLabels = {
@@ -436,13 +435,6 @@ export function FollowerManager() {
             </button>
             <button
               type="button"
-              className={section === "missions" ? "active" : ""}
-              onClick={() => setSection("missions")}
-            >
-              ภารกิจสำรวจ
-            </button>
-            <button
-              type="button"
               className={section === "locations" ? "active" : ""}
               onClick={() => setSection("locations")}
             >
@@ -451,9 +443,7 @@ export function FollowerManager() {
             <span>
               {section === "registry"
                 ? "จัดการเจ้าของ ความสามารถ และพื้นที่เข้าถึง"
-                : section === "missions"
-                  ? "สรุปผล ส่งรางวัล และคืนผู้ติดตามให้ลูกมู"
-                  : "ตั้งค่าพื้นที่ Tag และโอกาสสำเร็จพื้นฐาน"}
+                : "ตั้งค่าพื้นที่ Tag และโอกาสสำเร็จพื้นฐาน"}
             </span>
           </div>
         </div>
@@ -570,13 +560,7 @@ export function FollowerManager() {
           </div>
         )}
 
-        {section === "missions" ? (
-          <FollowerMissionQueue
-            onMissionChanged={async () => {
-              await loadFollowers(null, false);
-            }}
-          />
-        ) : section === "locations" ? (
+        {section === "locations" ? (
           <FollowerLocationManager />
         ) : (
         <div className="follower-workspace">

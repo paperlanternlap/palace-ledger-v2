@@ -42,7 +42,7 @@ function SubmissionList({
   onSelect,
 }) {
   if (loading) {
-    return <p className="queue-message">กำลังโหลดคิวตรวจโรล...</p>;
+    return <p className="queue-message">กำลังโหลดคิวตรวจผลงาน...</p>;
   }
 
   if (!submissions.length) {
@@ -77,7 +77,7 @@ function SubmissionList({
             <strong>
               {submission.characters?.character_name || "ไม่พบตัวละคร"}
             </strong>
-            <small>{submission.submission_type || "โรลทั่วไป"}</small>
+            <small>{submission.submission_type || "โรลเพลย์"}</small>
           </span>
           <time>
             {new Date(submission.submitted_at).toLocaleDateString("th-TH", {
@@ -103,7 +103,7 @@ function ReviewPanel({ submission, onReviewed }) {
       <section className="review-panel queue-empty">
         <Link2 size={28} />
         <strong>เลือกรายการเพื่อเริ่มตรวจ</strong>
-        <span>รายละเอียดโรลและเครื่องมือให้คะแนนจะแสดงตรงนี้</span>
+        <span>รายละเอียดผลงานและเครื่องมือให้คะแนนจะแสดงตรงนี้</span>
       </section>
     );
   }
@@ -142,7 +142,7 @@ function ReviewPanel({ submission, onReviewed }) {
           <h2>{submission.characters?.character_name || "ไม่พบตัวละคร"}</h2>
           <p>
             ผู้เล่น {submission.characters?.player_name || "—"} ·{" "}
-            {submission.submission_type || "โรลทั่วไป"}
+            {submission.submission_type || "โรลเพลย์"}
           </p>
         </div>
         <a
@@ -151,7 +151,7 @@ function ReviewPanel({ submission, onReviewed }) {
           rel="noreferrer"
           className="open-role-button"
         >
-          เปิดโรล <ExternalLink size={15} />
+          เปิดผลงาน <ExternalLink size={15} />
         </a>
       </header>
 
@@ -163,11 +163,11 @@ function ReviewPanel({ submission, onReviewed }) {
           </strong>
         </div>
         <div>
-          <span>ผู้ร่วมโรล</span>
+          <span>ผู้ร่วมงาน</span>
           <strong>{submission.participant_names || "ไม่มี"}</strong>
         </div>
         <div className="role-link">
-          <span>ลิงก์โรล</span>
+          <span>ลิงก์ผลงานหรือหลักฐาน</span>
           <strong>{submission.role_url}</strong>
         </div>
       </div>
@@ -310,7 +310,7 @@ export function RpQueue() {
         <div className="setup-icon">
           <FileWarning size={28} />
         </div>
-        <h2>RP Queue พร้อมแล้ว แต่ฐานข้อมูลยังไม่มีตาราง</h2>
+        <h2>คิวตรวจผลงานพร้อมแล้ว แต่ฐานข้อมูลยังไม่มีตาราง</h2>
         <p>
           รันไฟล์ migration ที่เตรียมไว้ใน Supabase SQL Editor
           แล้วเพิ่มบัญชีสตาฟก่อนเปิดใช้งานจริง
@@ -327,7 +327,7 @@ export function RpQueue() {
           <div className="queue-tools">
             <div>
               <div>
-                <h2>คิวตรวจโรล</h2>
+                <h2>คิวตรวจผลงาน</h2>
                 <span>{filteredSubmissions.length} รายการ</span>
               </div>
               <button
@@ -335,7 +335,7 @@ export function RpQueue() {
                 className="add-submission-button"
                 onClick={() => setShowCreateModal(true)}
               >
-                <Plus size={14} /> เพิ่มโรล
+                <Plus size={14} /> เพิ่มผลงาน
               </button>
             </div>
             <div className="search-box">
@@ -373,7 +373,7 @@ export function RpQueue() {
               submissionPages.setPage(page);
               setSelected(null);
             }}
-            label="หน้าคิวตรวจโรล"
+            label="หน้าคิวตรวจผลงาน"
           />
         </aside>
 

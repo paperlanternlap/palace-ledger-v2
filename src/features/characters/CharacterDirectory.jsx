@@ -4,23 +4,26 @@ import {
 } from "../../components/ui/ListPagination";
 import { useListPagination } from "../../components/ui/useListPagination";
 import { CharacterList } from "./CharacterList";
-import { STATUS_OPTIONS } from "./constants";
 import { formatNumber } from "./utils";
 
 export function CharacterDirectory({
   characters,
   selectedId,
-  selectedStatus,
   search,
+  roleFilter,
+  positionFilter,
+  roleOptions,
+  positionOptions,
   loading,
   onSelect,
-  onStatusChange,
   onSearchChange,
+  onRoleFilterChange,
+  onPositionFilterChange,
 }) {
   const characterPages = useListPagination(
     characters,
     6,
-    `${selectedStatus}|${search}`,
+    `${search}|${roleFilter}|${positionFilter}`,
   );
 
   return (
@@ -51,18 +54,33 @@ export function CharacterDirectory({
           )}
         </div>
 
-        <div className="status-filters" aria-label="กรองตามสถานะ">
-          {STATUS_OPTIONS.map((status) => (
-            <button
-              type="button"
-              key={status}
-              className={selectedStatus === status ? "selected" : ""}
-              onClick={() => onStatusChange(status)}
+        <div className="character-attribute-filters">
+          <label>
+            <span>ประเภทตัวละคร</span>
+            <select
+              value={roleFilter}
+              onChange={(event) => onRoleFilterChange(event.target.value)}
             >
-              {status}
-            </button>
-          ))}
+              <option value="all">ทุกประเภท</option>
+              {roleOptions.map((role) => (
+                <option key={role} value={role}>{role}</option>
+              ))}
+            </select>
+          </label>
+          <label>
+            <span>ยศ / ตำแหน่ง</span>
+            <select
+              value={positionFilter}
+              onChange={(event) => onPositionFilterChange(event.target.value)}
+            >
+              <option value="all">ทุกตำแหน่ง</option>
+              {positionOptions.map((position) => (
+                <option key={position} value={position}>{position}</option>
+              ))}
+            </select>
+          </label>
         </div>
+
       </div>
 
       <CharacterList
