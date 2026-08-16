@@ -100,7 +100,7 @@ function RequestList({ requests, selectedId, loading, onSelect }) {
           >
             <div className="request-row-icon">
               {request.requester?.avatar_url ? (
-                <img src={request.requester.avatar_url} alt="" />
+                <img src={request.requester.avatar_url} alt="" loading="lazy" decoding="async" />
               ) : (
                 <PackageCheck size={19} />
               )}

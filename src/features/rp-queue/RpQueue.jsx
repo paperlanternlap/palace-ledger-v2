@@ -84,7 +84,7 @@ function SubmissionList({
           onClick={() => onSelect(submission)}
         >
           {submission.characters?.avatar_url ? (
-            <img src={submission.characters.avatar_url} alt="" />
+            <img src={submission.characters.avatar_url} alt="" loading="lazy" decoding="async" />
           ) : (
             <div className="submission-avatar">
               {(submission.characters?.character_name || "?").slice(0, 1)}

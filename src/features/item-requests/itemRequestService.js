@@ -4,7 +4,9 @@ export function getItemUseRequests() {
   return supabase
     .from("item_use_requests")
     .select(`
-      *,
+      id, status, quantity, request_type, actor_name, use_channel,
+      desired_effect, details, role_url, secrecy_level, item_reserved,
+      staff_note, submitted_at,
       requester:characters!item_use_requests_requester_character_id_fkey (
         id,
         character_name,

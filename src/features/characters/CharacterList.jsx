@@ -41,6 +41,8 @@ export function CharacterList({
             <img
               src={character.avatar_url}
               alt=""
+              loading="lazy"
+              decoding="async"
               referrerPolicy="no-referrer"
             />
           ) : (

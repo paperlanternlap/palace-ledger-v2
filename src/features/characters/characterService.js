@@ -1,9 +1,14 @@
 import { supabase } from "../../supabase";
 
+const CHARACTER_SUMMARY_FIELDS = `
+  id, character_name, player_name, username, role, position, palace, avatar_url,
+  rp, favor, promotion_locked, promotion_lock_reason
+`;
+
 export async function getCharacters() {
   return supabase
     .from("characters")
-    .select("*")
+    .select(CHARACTER_SUMMARY_FIELDS)
     .order("character_name", { ascending: true });
 }
 
@@ -21,7 +26,7 @@ export function createCharacter(values) {
       rp: 0,
       favor: 0,
     })
-    .select("*")
+    .select(CHARACTER_SUMMARY_FIELDS)
     .single();
 }
 
@@ -29,12 +34,12 @@ export async function getCharacterDetails(characterId) {
   const [inventory, history, npcAcquaintances] = await Promise.all([
     supabase
       .from("character_inventory")
-      .select("*")
+      .select("id, item_name, quantity")
       .eq("character_id", characterId)
       .order("item_name", { ascending: true }),
     supabase
       .from("character_history")
-      .select("*")
+      .select("id, action, value, type, created_at")
       .eq("character_id", characterId)
       .order("created_at", { ascending: false })
       .limit(50),

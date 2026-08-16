@@ -4,7 +4,10 @@ export function getAcquisitionRequests() {
   return supabase
     .from("item_acquisition_requests")
     .select(`
-      *,
+      id, status, quantity, request_route, player_note, staff_note,
+      charged_amount, success_chance_percent, resolution_roll,
+      resolution_outcome, consequence, npc_opposed_roll, staff_hidden_roll,
+      submitted_at,
       character:characters (id, character_name, player_name, avatar_url, rp, favor),
       item:items (id, name, description, acquisition_type, acquisition_requires_roll,
         fulfillment_days_min, fulfillment_days_max, cost, is_limited,

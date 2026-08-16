@@ -1,9 +1,16 @@
 import { useEffect, useState } from "react";
 import {
   Activity,
+  ArrowDown,
+  ArrowUp,
   ChevronLeft,
   ChevronRight,
+  Coins,
+  Crown,
+  HeartHandshake,
   PackageOpen,
+  PackagePlus,
+  UserPlus,
   UserRoundCheck,
 } from "lucide-react";
 import { EmptyState } from "../../components/ui/EmptyState";
@@ -11,7 +18,7 @@ import { formatNumber } from "./utils";
 
 function Inventory({ items, loading }) {
   if (loading) return <p className="muted">กำลังโหลด...</p>;
-  if (!items.length) return <p className="muted">ตัวละครนี้ยังไม่มีไอเท็ม</p>;
+  if (!items.length) return <p className="compact-empty">ยังไม่มีไอเท็ม</p>;
 
   return items.map((item) => (
     <div className="inventory-row" key={item.id}>
@@ -39,7 +46,7 @@ function History({ items, loading }) {
   }, []);
 
   if (loading) return <p className="muted">กำลังโหลด...</p>;
-  if (!items.length) return <p className="muted">ยังไม่มีประวัติการทำรายการ</p>;
+  if (!items.length) return <p className="compact-empty">ยังไม่มีรายการ</p>;
 
   const totalPages = Math.max(1, Math.ceil(items.length / pageSize));
   const currentPage = Math.min(page, totalPages);
@@ -169,45 +176,39 @@ export function CharacterDetail({
         </div>
       </header>
 
-      <div className="character-action-groups">
-        <section className="character-action-group">
-          <div className="character-action-group__heading">
-            <strong>ทรัพยากรตัวละคร</strong>
-            <span>เพิ่ม ลด และแก้ไขยอดที่ตัวละครถืออยู่</span>
-          </div>
-          <div className="quick-actions resource-actions">
+      <div className="character-command-bar">
+        <section className="character-command-group">
+          <strong className="character-command-title">คะแนนและสิ่งของ</strong>
+          <div className="character-command-actions">
             <button type="button" onClick={() => onAdjust("rp")}>
+              <Coins size={17} />
               <span>จัดการ RP</span>
-              <small>เพิ่มหรือหักคะแนน</small>
             </button>
             <button type="button" onClick={() => onAdjust("favor")}>
-              <span>จัดการโปรดปราน</span>
-              <small>เพิ่มหรือหักค่าโปรดปราน</small>
+              <HeartHandshake size={17} />
+              <span>โปรดปราน</span>
             </button>
             <button type="button" onClick={onGrantItem}>
+              <PackagePlus size={17} />
               <span>จัดการไอเท็ม</span>
-              <small>เพิ่ม ลด หรือลบออกจากคลัง</small>
             </button>
           </div>
         </section>
 
-        <section className="character-action-group rank-action-group">
-          <div className="character-action-group__heading">
-            <strong>ตำแหน่งและพระราชโองการ</strong>
-            <span>จัดการลำดับขั้นหรือเปลี่ยนบทบาทเป็นกรณีพิเศษ</span>
-          </div>
-          <div className="quick-actions rank-actions">
+        <section className="character-command-group">
+          <strong className="character-command-title">ตำแหน่ง</strong>
+          <div className="character-command-actions">
             <button type="button" className="promote-action" onClick={onPromote}>
+              <ArrowUp size={17} />
               <span>เลื่อนขั้น</span>
-              <small>ตรวจโปรดปรานและสล็อตตำแหน่ง</small>
             </button>
             <button type="button" className="danger-action" onClick={onDemote}>
+              <ArrowDown size={17} />
               <span>ลดขั้น</span>
-              <small>ลดตำแหน่งลงหนึ่งลำดับ</small>
             </button>
             <button type="button" className="special-action" onClick={onSpecialAppointment}>
+              <Crown size={17} />
               <span>แต่งตั้งพิเศษ</span>
-              <small>ข้ามบทบาทหรือลดขั้นโดยพระราชโองการ</small>
             </button>
           </div>
         </section>
@@ -219,11 +220,10 @@ export function CharacterDetail({
             <UserRoundCheck size={18} />
             <span>
               <strong>NPC ที่รู้จัก</strong>
-              <small>ผู้ที่ตัวละครสามารถติดต่อเพื่อเจรจาซื้อสิ่งของ</small>
             </span>
           </div>
           <button type="button" onClick={onManageNpcAcquaintances}>
-            + เพิ่ม NPC ที่รู้จัก
+            <UserPlus size={15} /> เพิ่ม NPC
           </button>
         </div>
         {loading ? (

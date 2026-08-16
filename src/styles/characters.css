@@ -6,8 +6,8 @@
 .directory-head {
   display: flex;
   flex-direction: column;
-  gap: 14px;
-  padding: 20px 18px 16px;
+  gap: 12px;
+  padding: 18px 16px 14px;
   border-bottom: 1px solid var(--line);
 }
 
@@ -92,7 +92,7 @@
 .character-list {
   min-height: 0;
   flex: 1;
-  padding: 8px;
+  padding: 10px;
   overflow-y: auto;
 }
 
@@ -103,19 +103,21 @@
   align-items: center;
   gap: 11px;
   padding: 10px;
-  border: 1px solid transparent;
+  margin-bottom: 6px;
+  border: 1px solid #eee4d8;
   border-radius: 10px;
-  background: transparent;
+  background: #fffdf9;
   text-align: left;
 }
 
 .character-row:hover,
 .character-row.selected {
-  background: #f3ecdf;
+  border-color: #d9c7b1;
+  background: #f7efe3;
 }
 
 .character-row.selected {
-  border-color: #ded1bd;
+  box-shadow: inset 3px 0 0 var(--red);
 }
 
 .character-row img,
@@ -282,48 +284,37 @@
   font-weight: 600;
 }
 
-.character-action-groups {
+.character-command-bar {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 10px;
-  margin-top: 10px;
-}
-
-.character-action-group {
-  min-width: 0;
-  padding: 11px;
+  gap: 16px;
+  margin-top: 14px;
+  padding: 14px 16px;
   border: 1px solid var(--line);
   border-radius: 12px;
   background: #fbf8f2;
 }
 
-.rank-action-group {
-  background: #faf7ef;
-}
-
-.character-action-group__heading {
+.character-command-group {
+  min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 2px;
-  margin-bottom: 8px;
+  gap: 8px;
 }
 
-.character-action-group__heading strong {
+.character-command-title {
   color: var(--ink);
-  font-size: 12px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .2px;
 }
 
-.character-action-group__heading span {
-  color: var(--muted);
-  font-size: 9px;
-}
-
-.quick-actions {
+.character-command-actions {
   display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 7px;
 }
 
-.quick-actions button,
 .sub-card {
   border: 1px solid var(--line);
   border-radius: 11px;
@@ -337,47 +328,53 @@
   font: 700 17px "Noto Serif Thai", serif;
 }
 
-.quick-actions {
-  grid-template-columns: repeat(3, 1fr);
-}
-
-.quick-actions button {
+.character-command-actions button {
+  min-width: 0;
+  min-height: 46px;
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 2px;
-  padding: 11px 13px;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 9px 10px;
+  border: 1px solid #d9cbbb;
+  border-radius: 9px;
+  color: var(--ink);
   background: white;
-  text-align: left;
+  box-shadow: 0 2px 0 #e6d9ca;
+  font-size: 11px;
+  font-weight: 750;
+  white-space: nowrap;
+  transition: transform 140ms ease, border-color 140ms ease, box-shadow 140ms ease;
 }
 
-.quick-actions button:disabled {
+.character-command-actions button:hover:not(:disabled) {
+  border-color: #bd998e;
+  box-shadow: 0 3px 0 #dbc6bc;
+  transform: translateY(-1px);
+}
+
+.character-command-actions button:active:not(:disabled) {
+  box-shadow: 0 1px 0 #dbc6bc;
+  transform: translateY(1px);
+}
+
+.character-command-actions button:disabled {
   opacity: 0.5;
 }
 
-.quick-actions span {
-  font-size: 13px;
-  font-weight: 700;
-}
-
-.quick-actions small {
-  color: var(--muted);
-  font-size: 10px;
-}
-
-.quick-actions .danger-action {
+.character-command-actions .danger-action {
   color: #8f3f3b;
   border-color: #e4c6c2;
   background: #fff8f7;
 }
 
-.quick-actions .promote-action {
+.character-command-actions .promote-action {
   color: #4f673f;
   border-color: #cedabc;
   background: #f7faef;
 }
 
-.quick-actions .special-action {
+.character-command-actions .special-action {
   color: #775c2c;
   border-color: #e3d0a7;
   background: #fffaf0;
@@ -425,6 +422,10 @@
 
 .character-npc-card__heading button {
   min-height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
   padding: 7px 11px;
   border: 1px solid #d7b8b0;
   border-radius: 8px;
@@ -467,7 +468,7 @@
 }
 
 .character-npc-empty {
-  margin: 9px 0 0;
+  margin: 8px 0 0 26px;
   color: var(--muted);
   font-size: 10px;
 }
@@ -682,20 +683,12 @@
 }
 
 @media (max-width: 1100px) {
-  .character-action-groups {
+  .character-command-bar {
     grid-template-columns: 1fr;
   }
 }
 
 @media (max-width: 620px) {
-  .quick-actions {
-    grid-template-columns: 1fr;
-  }
-
-  .quick-actions button {
-    min-height: 58px;
-  }
-
   .character-npc-card__heading {
     align-items: flex-start;
     flex-direction: column;
@@ -857,7 +850,7 @@
 }
 
 .detail-sections {
-  min-height: 230px;
+  min-height: 190px;
   display: grid;
   grid-template-columns: clamp(260px, 30%, 360px) minmax(320px, 1fr);
   gap: 12px;
@@ -891,6 +884,15 @@
   min-height: 0;
   flex: 1;
   overflow-y: auto;
+}
+
+.compact-empty {
+  min-height: 110px;
+  display: grid;
+  place-items: center;
+  margin: 0;
+  color: var(--muted);
+  font-size: 11px;
 }
 
 .activity-card .scroll-area {
@@ -1037,12 +1039,8 @@
     font-size: 19px !important;
   }
 
-  .quick-actions span {
-    font-size: 15px;
-  }
-
-  .quick-actions small {
-    font-size: 12px;
+  .character-command-actions button {
+    font-size: 13px;
   }
 
   .section-heading h3 {
@@ -1112,11 +1110,11 @@
     border-left: 0;
   }
 
-  .quick-actions {
+  .character-command-actions {
     grid-template-columns: 1fr 1fr;
   }
 
-  .quick-actions button:last-child {
+  .character-command-actions button:last-child {
     grid-column: 1 / -1;
   }
 }

@@ -14,6 +14,15 @@ import './styles/overlays.css'
 import './styles/responsive.css'
 import App from './App.jsx'
 
+window.addEventListener('vite:preloadError', (event) => {
+  event.preventDefault()
+  const recoveryKey = 'palace-ledger-chunk-recovery'
+  if (sessionStorage.getItem(recoveryKey)) return
+  sessionStorage.setItem(recoveryKey, '1')
+  window.location.reload()
+})
+window.setTimeout(() => sessionStorage.removeItem('palace-ledger-chunk-recovery'), 10_000)
+
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <App />

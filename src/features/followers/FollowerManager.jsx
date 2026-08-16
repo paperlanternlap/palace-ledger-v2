@@ -117,7 +117,7 @@ function FollowerList({ followers, selectedId, loading, onSelect }) {
           onClick={() => onSelect(follower)}
         >
           {follower.avatar_url ? (
-            <img src={follower.avatar_url} alt="" />
+            <img src={follower.avatar_url} alt="" loading="lazy" decoding="async" />
           ) : (
             <div className="follower-avatar">
               {(follower.name || "?").slice(0, 1)}
@@ -176,7 +176,7 @@ function FollowerDetail({ follower, busy, onAssign, onEdit, onRelease }) {
     <section className="follower-detail">
       <header className="follower-profile">
         {follower.avatar_url ? (
-          <img src={follower.avatar_url} alt="" />
+          <img src={follower.avatar_url} alt="" loading="lazy" decoding="async" />
         ) : (
           <div className="follower-profile-placeholder">
             {(follower.name || "?").slice(0, 1)}

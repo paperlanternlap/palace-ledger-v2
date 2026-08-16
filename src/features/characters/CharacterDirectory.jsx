@@ -55,9 +55,9 @@ export function CharacterDirectory({
         </div>
 
         <div className="character-attribute-filters">
-          <label>
-            <span>ประเภทตัวละคร</span>
+          <label aria-label="กรองตามประเภทตัวละคร">
             <select
+              aria-label="ประเภทตัวละคร"
               value={roleFilter}
               onChange={(event) => onRoleFilterChange(event.target.value)}
             >
@@ -67,9 +67,9 @@ export function CharacterDirectory({
               ))}
             </select>
           </label>
-          <label>
-            <span>ยศ / ตำแหน่ง</span>
+          <label aria-label="กรองตามยศหรือตำแหน่ง">
             <select
+              aria-label="ยศหรือตำแหน่ง"
               value={positionFilter}
               onChange={(event) => onPositionFilterChange(event.target.value)}
             >
