@@ -491,18 +491,20 @@ export function ItemRequestQueue() {
                 onChange={(event) => setSearch(event.target.value)}
               />
             </div>
-            <div className="item-request-filters">
-              {filters.map((item) => (
-                <button
-                  type="button"
-                  key={item.id}
-                  className={filter === item.id ? "selected" : ""}
-                  onClick={() => setFilter(item.id)}
-                >
-                  {item.label}
-                </button>
-              ))}
-            </div>
+            <label className="item-request-status-filter">
+              <span>สถานะ</span>
+              <select
+                value={filter}
+                onChange={(event) => {
+                  setFilter(event.target.value);
+                  setSelected(null);
+                }}
+              >
+                {filters.map((item) => (
+                  <option key={item.id} value={item.id}>{item.label}</option>
+                ))}
+              </select>
+            </label>
           </div>
 
           {setupRequired ? (

@@ -1,14 +1,14 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Sidebar } from "./components/layout/Sidebar";
+import { StaffPageContent } from "./components/layout/StaffPageContent";
 import { StaffGate } from "./features/auth/StaffGate";
 import { AdjustmentModal } from "./features/characters/AdjustmentModal";
-import { CharacterDetail } from "./features/characters/CharacterDetail";
-import { CharacterDirectory } from "./features/characters/CharacterDirectory";
 import { GrantItemModal } from "./features/characters/GrantItemModal";
 import { CreateCharacterModal } from "./features/characters/CreateCharacterModal";
 import { DemotionModal } from "./features/characters/DemotionModal";
 import { PromotionModal } from "./features/characters/PromotionModal";
 import { SpecialAppointmentModal } from "./features/characters/SpecialAppointmentModal";
+import { NpcAcquaintanceModal } from "./features/characters/NpcAcquaintanceModal";
 import {
   adjustCharacterResource,
   demoteCharacter,
@@ -21,13 +21,8 @@ import {
   filterCharacters,
   formatNumber,
 } from "./features/characters/utils";
-import { InventoryManager } from "./features/inventory/InventoryManager";
-import { ItemRequestQueue } from "./features/item-requests/ItemRequestQueue";
-import { FollowerManager } from "./features/followers/FollowerManager";
-import { FollowerMissionQueue } from "./features/followers/FollowerMissionQueue";
-import { RpQueue } from "./features/rp-queue/RpQueue";
-import { StaffOverview } from "./features/overview/StaffOverview";
 import { signOut } from "./features/auth/authService";
+import { getStaffPageTitle } from "./config/staffNavigation";
 import {
   CHARACTER_ROLE_OPTIONS,
   getPositionOptions,
@@ -39,6 +34,7 @@ function StaffApp() {
   const [selectedCharacter, setSelectedCharacter] = useState(null);
   const [inventory, setInventory] = useState([]);
   const [history, setHistory] = useState([]);
+  const [npcAcquaintances, setNpcAcquaintances] = useState([]);
   const [search, setSearch] = useState("");
   const [roleFilter, setRoleFilter] = useState("all");
   const [positionFilter, setPositionFilter] = useState("all");
@@ -50,6 +46,7 @@ function StaffApp() {
   const [showDemotion, setShowDemotion] = useState(false);
   const [showPromotion, setShowPromotion] = useState(false);
   const [showSpecialAppointment, setShowSpecialAppointment] = useState(false);
+  const [showNpcAcquaintance, setShowNpcAcquaintance] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [notice, setNotice] = useState(null);
   const [loggingOut, setLoggingOut] = useState(false);
@@ -87,14 +84,16 @@ function StaffApp() {
     setSelectedCharacter(character);
     setInventory([]);
     setHistory([]);
+    setNpcAcquaintances([]);
     setDetailLoading(true);
 
     const results = await getCharacterDetails(character.id);
-    if (results.inventory.error || results.history.error) {
+    if (results.inventory.error || results.history.error || results.npcAcquaintances.error) {
       setNotice({ type: "error", message: "โหลดรายละเอียดบางส่วนไม่สำเร็จ" });
     }
     setInventory(results.inventory.data || []);
     setHistory(results.history.data || []);
+    setNpcAcquaintances(results.npcAcquaintances.data || []);
     setDetailLoading(false);
   }
 
@@ -169,19 +168,7 @@ function StaffApp() {
       <main className="main-content flex h-screen min-h-0 flex-col overflow-hidden">
         <header className="page-header flex h-9 shrink-0 items-center justify-between">
           <h1 className="!text-lg !leading-none">
-            {activePage === "dashboard"
-              ? "ภาพรวมงาน"
-              : activePage === "characters"
-              ? "จัดการตัวละคร"
-              : activePage === "rp-queue"
-                ? "คิวตรวจผลงาน"
-                : activePage === "item-requests"
-                  ? "คำร้องและงานแม่งาน"
-                  : activePage === "followers"
-                    ? "จัดการผู้ติดตาม"
-                    : activePage === "exploration-missions"
-                      ? "ภารกิจสำรวจ"
-                    : "คลังไอเท็ม"}
+            {getStaffPageTitle(activePage)}
           </h1>
           <div className="page-header-actions">
             {activePage === "characters" && (
@@ -196,50 +183,42 @@ function StaffApp() {
           </div>
         </header>
 
-        {activePage === "dashboard" ? (
-          <StaffOverview onNavigate={setActivePage} />
-        ) : activePage === "characters" ? (
-          <section className="workspace min-h-0 flex-1">
-            <CharacterDirectory
-              characters={filteredCharacters}
-              selectedId={selectedCharacter?.id}
-              search={search}
-              roleFilter={roleFilter}
-              positionFilter={positionFilter}
-              roleOptions={characterRoleOptions}
-              positionOptions={characterPositionOptions}
-              loading={loading}
-              onSelect={selectCharacter}
-              onSearchChange={setSearch}
-              onRoleFilterChange={(role) => {
+        <StaffPageContent
+          activePage={activePage}
+          onNavigate={setActivePage}
+          characterWorkspace={{
+            directory: {
+              characters: filteredCharacters,
+              selectedId: selectedCharacter?.id,
+              search,
+              roleFilter,
+              positionFilter,
+              roleOptions: characterRoleOptions,
+              positionOptions: characterPositionOptions,
+              loading,
+              onSelect: selectCharacter,
+              onSearchChange: setSearch,
+              onRoleFilterChange: (role) => {
                 setRoleFilter(role);
                 setPositionFilter("all");
-              }}
-              onPositionFilterChange={setPositionFilter}
-            />
-            <CharacterDetail
-              character={selectedCharacter}
-              inventory={inventory}
-              history={history}
-              loading={detailLoading}
-              onAdjust={setAdjustmentType}
-              onGrantItem={() => setShowGrantItem(true)}
-              onPromote={() => setShowPromotion(true)}
-              onDemote={() => setShowDemotion(true)}
-              onSpecialAppointment={() => setShowSpecialAppointment(true)}
-            />
-          </section>
-        ) : activePage === "rp-queue" ? (
-          <RpQueue />
-        ) : activePage === "item-requests" ? (
-          <ItemRequestQueue />
-        ) : activePage === "exploration-missions" ? (
-          <FollowerMissionQueue />
-        ) : activePage === "followers" ? (
-          <FollowerManager />
-        ) : (
-          <InventoryManager />
-        )}
+              },
+              onPositionFilterChange: setPositionFilter,
+            },
+            detail: {
+              character: selectedCharacter,
+              inventory,
+              history,
+              npcAcquaintances,
+              loading: detailLoading,
+              onAdjust: setAdjustmentType,
+              onGrantItem: () => setShowGrantItem(true),
+              onPromote: () => setShowPromotion(true),
+              onDemote: () => setShowDemotion(true),
+              onSpecialAppointment: () => setShowSpecialAppointment(true),
+              onManageNpcAcquaintances: () => setShowNpcAcquaintance(true),
+            },
+          }}
+        />
       </main>
 
       {adjustmentType && selectedCharacter && (
@@ -377,6 +356,19 @@ function StaffApp() {
             });
             await loadCharacters(data.id);
             await selectCharacter(data);
+          }}
+        />
+      )}
+
+      {showNpcAcquaintance && selectedCharacter && (
+        <NpcAcquaintanceModal
+          character={selectedCharacter}
+          acquaintances={npcAcquaintances}
+          onClose={() => setShowNpcAcquaintance(false)}
+          onSaved={async () => {
+            setShowNpcAcquaintance(false);
+            setNotice({ type: "success", message: "เพิ่ม NPC ที่ตัวละครรู้จักแล้ว" });
+            await selectCharacter(selectedCharacter);
           }}
         />
       )}

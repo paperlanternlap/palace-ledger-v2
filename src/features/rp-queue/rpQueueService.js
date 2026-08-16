@@ -18,6 +18,14 @@ export async function getRpSubmissions() {
     .limit(100);
 }
 
+export function getRpRewardGuidelines() {
+  return supabase
+    .from("rp_reward_guidelines")
+    .select("submission_type, recommended_rp, recommended_favor, note")
+    .eq("active", true)
+    .order("submission_type", { ascending: true });
+}
+
 export function getCharactersForSubmission() {
   return supabase
     .from("characters")

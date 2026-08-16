@@ -17,11 +17,18 @@ import {
 } from "./ItemModal";
 import { getCatalogItems } from "./inventoryService";
 
-const filters = [
-  { id: "shop", label: "ขายในร้าน" },
+const routeFilters = [
+  { id: "shop", label: "แสดงในบัญชีสิ่งของ" },
+  { id: "palace_stock", label: "เบิกจากวัง" },
+  { id: "external_legal", label: "จัดซื้อภายนอก" },
+  { id: "restricted", label: "ซื้อจาก NPC" },
   { id: "reward", label: "ของแจก / รางวัล" },
   { id: "story", label: "ของเนื้อเรื่อง" },
-  { id: "all", label: "ทั้งหมด" },
+  { id: "all", label: "ทุกช่องทาง" },
+];
+
+const stockFilters = [
+  { id: "all", label: "ทุกสถานะ" },
   { id: "limited", label: "จำกัดจำนวน" },
   { id: "low", label: "ใกล้หมด" },
   { id: "out", label: "หมด" },
@@ -38,8 +45,10 @@ const categoryLabels = {
 };
 
 function getAcquisitionLabel(item) {
-  if (item.shop_available) return "ซื้อจากร้าน";
-  if (item.use_category === "story") return "ของเนื้อเรื่อง";
+  if (item.acquisition_type === "palace_stock") return "เบิกจากคลัง";
+  if (item.acquisition_type === "external_legal") return "จัดซื้อภายนอก";
+  if (item.acquisition_type === "restricted") return "ซื้อจาก NPC";
+  if (item.acquisition_type === "story_only" || item.use_category === "story") return "ของเนื้อเรื่อง";
   return "ของแจก / รางวัล";
 }
 
@@ -83,11 +92,17 @@ function ItemCard({ item, onAdjust, onEdit }) {
         <span className={item.fulfillment_type === "staff_request" ? "task" : ""}>
           {fulfillmentLabel}
         </span>
+        {item.acquisition_type === "restricted" && (
+          <span className="task">
+            {item.acquisition_channel?.npc_name || "ยังไม่กำหนด NPC"}
+            {` · เสี่ยง ${item.acquisition_risk_level || 1}/5`}
+          </span>
+        )}
       </div>
 
       <div className="catalog-commerce">
         <div>
-          <small>{item.shop_available ? "ราคาแลก" : "ไม่มีราคาในร้าน"}</small>
+          <small>{item.shop_available ? "ค่าใช้ RP" : "ไม่เปิดในบัญชีสิ่งของ"}</small>
           <strong>
             {item.shop_available ? (
               <>
@@ -95,7 +110,7 @@ function ItemCard({ item, onAdjust, onEdit }) {
                 <em>{currencyLabel}</em>
               </>
             ) : (
-              "แจกโดยสต๊าฟ"
+              "มอบโดยสต๊าฟ"
             )}
           </strong>
         </div>
@@ -130,7 +145,8 @@ function ItemCard({ item, onAdjust, onEdit }) {
 export function InventoryManager() {
   const [items, setItems] = useState([]);
   const [search, setSearch] = useState("");
-  const [filter, setFilter] = useState("shop");
+  const [routeFilter, setRouteFilter] = useState("shop");
+  const [stockFilter, setStockFilter] = useState("all");
   const [loading, setLoading] = useState(true);
   const [setupRequired, setSetupRequired] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -186,29 +202,33 @@ export function InventoryManager() {
           .join(" ")
           .toLocaleLowerCase("th")
           .includes(keyword);
-      const matchesFilter =
-        filter === "all" ||
-        (filter === "shop" && item.shop_available) ||
-        (filter === "reward" &&
+      const matchesRoute =
+        routeFilter === "all" ||
+        (routeFilter === "shop" && item.shop_available) ||
+        (["palace_stock", "external_legal", "restricted"].includes(routeFilter) &&
+          item.acquisition_type === routeFilter) ||
+        (routeFilter === "reward" &&
           !item.shop_available &&
           item.use_category !== "story") ||
-        (filter === "story" &&
+        (routeFilter === "story" &&
           !item.shop_available &&
-          item.use_category === "story") ||
-        (filter === "limited" && item.is_limited) ||
-        (filter === "low" &&
+          item.use_category === "story");
+      const matchesStock =
+        stockFilter === "all" ||
+        (stockFilter === "limited" && item.is_limited) ||
+        (stockFilter === "low" &&
           item.is_limited &&
           item.stock_quantity > 0 &&
           item.stock_quantity <= item.low_stock_threshold) ||
-        (filter === "out" && item.is_limited && item.stock_quantity === 0);
-      return matchesSearch && matchesFilter;
+        (stockFilter === "out" && item.is_limited && item.stock_quantity === 0);
+      return matchesSearch && matchesRoute && matchesStock;
     });
-  }, [filter, items, search]);
+  }, [items, routeFilter, search, stockFilter]);
 
   const itemPages = useListPagination(
     filteredItems,
     8,
-    `${filter}|${search}`,
+    `${routeFilter}|${stockFilter}|${search}`,
   );
 
   if (setupRequired) {
@@ -249,27 +269,35 @@ export function InventoryManager() {
         </div>
 
         <div className="inventory-toolbar">
-          <div className="search-box">
+          <div className="search-box inventory-search">
             <Search size={17} />
             <input
               type="search"
               value={search}
-              placeholder="ค้นหาไอเท็ม"
+              placeholder="ค้นหาชื่อหรือรายละเอียดไอเท็ม"
               onChange={(event) => setSearch(event.target.value)}
             />
           </div>
-          <div className="inventory-filters">
-            {filters.map((item) => (
-              <button
-                type="button"
-                key={item.id}
-                className={filter === item.id ? "selected" : ""}
-                onClick={() => setFilter(item.id)}
-              >
-                {item.label}
-              </button>
+          <select
+            className="inventory-filter-select"
+            value={routeFilter}
+            aria-label="กรองตามช่องทางได้รับ"
+            onChange={(event) => setRouteFilter(event.target.value)}
+          >
+            {routeFilters.map((item) => (
+              <option key={item.id} value={item.id}>{item.label}</option>
             ))}
-          </div>
+          </select>
+          <select
+            className="inventory-filter-select"
+            value={stockFilter}
+            aria-label="กรองตามสถานะสต็อก"
+            onChange={(event) => setStockFilter(event.target.value)}
+          >
+            {stockFilters.map((item) => (
+              <option key={item.id} value={item.id}>{item.label}</option>
+            ))}
+          </select>
           <button
             type="button"
             className="primary-button inventory-add-button"

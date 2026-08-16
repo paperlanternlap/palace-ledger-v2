@@ -215,24 +215,27 @@ export function FollowerMissionQueue({ onMissionChanged }) {
           </div>
           <small>{missions.length} ภารกิจทั้งหมด</small>
         </header>
-        <div className="mission-filters" aria-label="กรองสถานะภารกิจ">
-          {[
-            ["exploring", "รอตอบ"],
-            ["completed", "สรุปแล้ว"],
-            ["cancelled", "ยกเลิก"],
-            ["all", "ทั้งหมด"],
-          ].map(([value, label]) => (
-            <button
-              type="button"
-              key={value}
-              className={statusFilter === value ? "active" : ""}
-              onClick={() => setStatusFilter(value)}
-            >
-              <span>{label}</span>
-              <small>{statusCounts[value]}</small>
-            </button>
-          ))}
-        </div>
+        <label className="mission-status-filter">
+          <span>สถานะภารกิจ</span>
+          <select
+            value={statusFilter}
+            onChange={(event) => {
+              setStatusFilter(event.target.value);
+              setSelectedId(null);
+            }}
+          >
+            {[
+              ["exploring", "รอตอบ"],
+              ["completed", "สรุปแล้ว"],
+              ["cancelled", "ยกเลิก"],
+              ["all", "ทั้งหมด"],
+            ].map(([value, label]) => (
+              <option key={value} value={value}>
+                {label} ({statusCounts[value]})
+              </option>
+            ))}
+          </select>
+        </label>
         <div className="mission-list">
           {loading ? (
             <p>กำลังโหลดภารกิจ...</p>

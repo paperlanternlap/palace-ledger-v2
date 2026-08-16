@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { MapPin, Plus, Save } from "lucide-react";
+import { MapPin, Plus, Save, Search } from "lucide-react";
 import {
   createExplorationLocation,
   getAllExplorationLocations,
@@ -48,6 +48,8 @@ export function FollowerLocationManager() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
 
   const loadLocations = useCallback(async (preferredId) => {
     setLoading(true);
@@ -77,6 +79,25 @@ export function FollowerLocationManager() {
     () => locations.filter((location) => location.active).length,
     [locations],
   );
+  const filteredLocations = useMemo(() => {
+    const keyword = search.trim().toLocaleLowerCase("th");
+    return locations.filter((location) => {
+      const matchesStatus =
+        statusFilter === "all" ||
+        (statusFilter === "active" && location.active) ||
+        (statusFilter === "inactive" && !location.active);
+      const text = [
+        location.name,
+        location.short_name,
+        location.category,
+        location.code,
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLocaleLowerCase("th");
+      return matchesStatus && (!keyword || text.includes(keyword));
+    });
+  }, [locations, search, statusFilter]);
 
   function selectLocation(location) {
     setSelectedId(location.id);
@@ -136,19 +157,38 @@ export function FollowerLocationManager() {
       <aside className="location-directory">
         <header>
           <div>
-            <span>โลเคชั่นทั้งหมด</span>
-            <strong>{locations.length}</strong>
-            <small>เปิดใช้ {activeCount}</small>
+            <h2>พื้นที่สำรวจ</h2>
+            <p>{locations.length} พื้นที่ · เปิดใช้งาน {activeCount}</p>
           </div>
           <button type="button" onClick={startCreate}>
             <Plus size={14} /> เพิ่มพื้นที่
           </button>
         </header>
+        <div className="location-directory-tools">
+          <div className="search-box">
+            <Search size={16} />
+            <input
+              type="search"
+              value={search}
+              placeholder="ค้นหาพื้นที่"
+              onChange={(event) => setSearch(event.target.value)}
+            />
+          </div>
+          <select
+            value={statusFilter}
+            aria-label="กรองสถานะพื้นที่"
+            onChange={(event) => setStatusFilter(event.target.value)}
+          >
+            <option value="all">ทุกสถานะ</option>
+            <option value="active">เปิดใช้งาน</option>
+            <option value="inactive">ปิดใช้งาน</option>
+          </select>
+        </div>
         <div className="location-list">
           {loading ? (
             <p>กำลังโหลดโลเคชั่น...</p>
-          ) : locations.length ? (
-            locations.map((location) => (
+          ) : filteredLocations.length ? (
+            filteredLocations.map((location) => (
               <button
                 type="button"
                 key={location.id}
@@ -166,9 +206,15 @@ export function FollowerLocationManager() {
               </button>
             ))
           ) : (
-            <div className="mission-empty">
+            <div className="mission-empty location-empty">
               <MapPin size={24} />
-              <strong>ยังไม่มีโลเคชั่น</strong>
+              <strong>{locations.length ? "ไม่พบพื้นที่ที่ค้นหา" : "ยังไม่มีพื้นที่สำรวจ"}</strong>
+              <span>{locations.length ? "ลองเปลี่ยนคำค้นหาหรือสถานะ" : "เริ่มสร้างพื้นที่แรกสำหรับภารกิจสำรวจ"}</span>
+              {!locations.length && (
+                <button type="button" onClick={startCreate}>
+                  <Plus size={14} /> สร้างพื้นที่แรก
+                </button>
+              )}
             </div>
           )}
         </div>
@@ -179,6 +225,7 @@ export function FollowerLocationManager() {
           <div>
             <span>{selectedId ? "แก้ไขโลเคชั่น" : "สร้างโลเคชั่นใหม่"}</span>
             <h2>{form.shortName || "พื้นที่สำรวจใหม่"}</h2>
+            <p>{selectedId ? `เขต ${form.zoneNumber} · ${form.code}` : "กำหนดข้อมูลที่ผู้เล่นเห็นและกติกาการสำรวจ"}</p>
           </div>
           <div className="location-chance-preview">
             <span>โอกาสพื้นฐาน</span>
@@ -187,114 +234,121 @@ export function FollowerLocationManager() {
         </header>
 
         <form onSubmit={submit}>
-          <div className="location-form-grid three">
+          <section className="location-form-section">
+            <header>
+              <div><strong>ข้อมูลที่ผู้เล่นเห็น</strong><span>ชื่อและคำอธิบายที่ปรากฏในหน้าสำรวจ</span></div>
+            </header>
+            <div className="location-form-grid">
+              <label>
+                ชื่อย่อ
+                <input
+                  required
+                  value={form.shortName}
+                  placeholder="เช่น กองโอสถ"
+                  onChange={(event) => update("shortName", event.target.value)}
+                />
+              </label>
+              <label>
+                ชื่อเต็ม
+                <input
+                  required
+                  value={form.name}
+                  placeholder="ชื่อเต็มของสถานที่"
+                  onChange={(event) => update("name", event.target.value)}
+                />
+              </label>
+              <label>
+                หมวดหมู่
+                <input
+                  required
+                  value={form.category}
+                  placeholder="เช่น กองงาน, เขตพระราชฐาน"
+                  onChange={(event) => update("category", event.target.value)}
+                />
+              </label>
+            </div>
             <label>
-              หมายเลขเขต
-              <input
-                type="number"
-                min="1"
-                max="99"
-                required
-                value={form.zoneNumber}
-                onChange={(event) => update("zoneNumber", event.target.value)}
+              คำอธิบายพื้นที่
+              <textarea
+                rows="3"
+                value={form.summary}
+                placeholder="บรรยากาศ หน้าที่ของพื้นที่ และสิ่งที่อาจค้นพบ"
+                onChange={(event) => update("summary", event.target.value)}
               />
             </label>
-            <label>
-              รหัสระบบ
-              <input
-                required
-                value={form.code}
-                placeholder="medical_bureau"
-                onChange={(event) => update("code", event.target.value)}
-              />
-            </label>
-            <label>
-              ลำดับแสดง
-              <input
-                type="number"
-                min="0"
-                value={form.sortOrder}
-                onChange={(event) => update("sortOrder", event.target.value)}
-              />
-            </label>
-          </div>
+          </section>
 
-          <div className="location-form-grid">
-            <label>
-              ชื่อเต็ม
-              <input
-                required
-                value={form.name}
-                onChange={(event) => update("name", event.target.value)}
-              />
-            </label>
-            <label>
-              ชื่อย่อ
-              <input
-                required
-                value={form.shortName}
-                onChange={(event) => update("shortName", event.target.value)}
-              />
-            </label>
-          </div>
-
-          <div className="location-form-grid">
-            <label>
-              หมวดหมู่
-              <input
-                required
-                value={form.category}
-                placeholder="เช่น กองโอสถ"
-                onChange={(event) => update("category", event.target.value)}
-              />
-            </label>
-            <label>
-              โอกาสสำเร็จพื้นฐาน
-              <div className="location-percent-input">
+          <section className="location-form-section">
+            <header>
+              <div><strong>กติกาและระบบ</strong><span>รหัส การเรียงลำดับ และโอกาสสำเร็จพื้นฐาน</span></div>
+            </header>
+            <div className="location-form-grid system-grid">
+              <label>
+                รหัสระบบ
+                <input
+                  required
+                  value={form.code}
+                  placeholder="medical_bureau"
+                  onChange={(event) => update("code", event.target.value)}
+                />
+              </label>
+              <label>
+                หมายเลขเขต
                 <input
                   type="number"
-                  min="5"
-                  max="95"
+                  min="1"
+                  max="99"
                   required
-                  value={form.baseSuccessPercent}
-                  onChange={(event) =>
-                    update("baseSuccessPercent", event.target.value)
-                  }
+                  value={form.zoneNumber}
+                  onChange={(event) => update("zoneNumber", event.target.value)}
                 />
-                <span>%</span>
-              </div>
+              </label>
+              <label>
+                ลำดับแสดง
+                <input
+                  type="number"
+                  min="0"
+                  value={form.sortOrder}
+                  onChange={(event) => update("sortOrder", event.target.value)}
+                />
+              </label>
+              <label>
+                โอกาสสำเร็จพื้นฐาน
+                <div className="location-percent-input">
+                  <input
+                    type="number"
+                    min="5"
+                    max="95"
+                    required
+                    value={form.baseSuccessPercent}
+                    onChange={(event) => update("baseSuccessPercent", event.target.value)}
+                  />
+                  <span>%</span>
+                </div>
+              </label>
+            </div>
+            <label>
+              Tag ที่จับคู่กับ Talent
+              <input
+                value={form.tags}
+                placeholder="สมุนไพร, การแพทย์, ยา, ข่าว"
+                onChange={(event) => update("tags", event.target.value)}
+              />
+              <small>คั่นแต่ละ Tag ด้วยเครื่องหมายจุลภาค</small>
             </label>
-          </div>
+          </section>
 
-          <label>
-            คำอธิบายพื้นที่
-            <textarea
-              rows="3"
-              value={form.summary}
-              onChange={(event) => update("summary", event.target.value)}
-            />
-          </label>
-
-          <label>
-            Tag ที่จับคู่กับ Talent
-            <input
-              value={form.tags}
-              placeholder="สมุนไพร, การแพทย์, ยา, ข่าว"
-              onChange={(event) => update("tags", event.target.value)}
-            />
-            <small>คั่นด้วยเครื่องหมายจุลภาค</small>
-          </label>
-
-          <label className="stock-toggle">
+          <label className="location-availability">
+            <span>
+              <strong>เปิดให้ส่งสำรวจ</strong>
+              <small>เมื่อปิด ผู้เล่นจะไม่เห็นพื้นที่นี้ในภารกิจใหม่</small>
+            </span>
             <input
               type="checkbox"
               checked={form.active}
               onChange={(event) => update("active", event.target.checked)}
             />
-            <span>
-              <strong>เปิดให้ส่งสำรวจ</strong>
-              <small>เมื่อปิด ผู้เล่นจะไม่เห็นพื้นที่นี้ในภารกิจใหม่</small>
-            </span>
+            <i aria-hidden="true" />
           </label>
 
           {error && <p className="follower-form-error">{error}</p>}

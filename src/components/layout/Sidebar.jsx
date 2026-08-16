@@ -1,25 +1,7 @@
 import {
-  ClipboardList,
-  Compass,
-  FileText,
-  Gift,
-  Home,
   LogOut,
-  ScrollText,
-  UserRoundCheck,
-  Users,
 } from "lucide-react";
-
-const navItems = [
-  { id: "dashboard", label: "ภาพรวม", icon: Home },
-  { id: "characters", label: "ตัวละคร", icon: Users },
-  { id: "rp-queue", label: "คิวตรวจผลงาน", icon: ScrollText },
-  { id: "item-requests", label: "คำร้อง", icon: ClipboardList },
-  { id: "exploration-missions", label: "ภารกิจสำรวจ", icon: Compass },
-  { id: "inventory", label: "คลังไอเท็ม", icon: Gift },
-  { id: "followers", label: "ผู้ติดตาม", icon: UserRoundCheck },
-  { label: "ประวัติ", icon: FileText, disabled: true },
-];
+import { STAFF_NAV_ITEMS } from "../../config/staffNavigation";
 
 export function Sidebar({
   activePage,
@@ -38,7 +20,7 @@ export function Sidebar({
       </div>
 
       <nav className="nav-list" aria-label="เมนูหลัก">
-        {navItems.map(({ id, label, icon: Icon, disabled, badge }) => (
+        {STAFF_NAV_ITEMS.map(({ id, label, icon: Icon, disabled, badge }) => (
           <button
             key={label}
             type="button"

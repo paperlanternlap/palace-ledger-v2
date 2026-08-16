@@ -16,6 +16,7 @@ import {
 import { useListPagination } from "../../components/ui/useListPagination";
 import {
   getRpSubmissions,
+  getRpRewardGuidelines,
   reviewRpSubmission,
 } from "./rpQueueService";
 import { CreateSubmissionModal } from "./CreateSubmissionModal";
@@ -34,6 +35,22 @@ const statusLabels = {
   approved: "อนุมัติแล้ว",
   rejected: "ไม่ผ่าน",
 };
+
+const rewardGuidelines = {
+  "โรลเพลย์": { rp: 8, favor: 1 },
+  "เข้าร่วมกิจกรรม": { rp: 10, favor: 1 },
+  "งานวาด / งานสร้างสรรค์": { rp: 6, favor: 0 },
+  "ภารกิจ": { rp: 8, favor: 1 },
+  "สำรวจ": { rp: 5, favor: 0 },
+  "อื่น ๆ": { rp: 5, favor: 0 },
+};
+
+function suggestedReward(submission, guidelines = rewardGuidelines) {
+  if (!submission || submission.status === "approved") {
+    return { rp: submission?.awarded_rp || 0, favor: submission?.awarded_favor || 0 };
+  }
+  return guidelines[submission.submission_type] || guidelines["อื่น ๆ"] || { rp: 5, favor: 0 };
+}
 
 function SubmissionList({
   submissions,
@@ -91,9 +108,10 @@ function SubmissionList({
   );
 }
 
-function ReviewPanel({ submission, onReviewed }) {
-  const [rp, setRp] = useState(submission?.awarded_rp || 0);
-  const [favor, setFavor] = useState(submission?.awarded_favor || 0);
+function ReviewPanel({ submission, onReviewed, guidelines }) {
+  const recommendation = suggestedReward(submission, guidelines);
+  const [rp, setRp] = useState(recommendation.rp);
+  const [favor, setFavor] = useState(recommendation.favor);
   const [note, setNote] = useState(submission?.staff_note || "");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
@@ -180,6 +198,10 @@ function ReviewPanel({ submission, onReviewed }) {
       )}
 
       <div className="review-form">
+        <p className="player-note">
+          ค่าแนะนำเริ่มต้นตามประเภทผลงาน ปรับได้ตามคุณภาพและผลที่เกิดขึ้นจริง
+          {recommendation.note ? ` · ${recommendation.note}` : ""}
+        </p>
         <div className="reward-fields">
           <label>
             RP ที่ได้รับ
@@ -252,6 +274,7 @@ export function RpQueue() {
   const [loading, setLoading] = useState(true);
   const [setupRequired, setSetupRequired] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [guidelines, setGuidelines] = useState(rewardGuidelines);
 
   async function loadQueue(preferredId, preserveCurrent = true) {
     setLoading(true);
@@ -279,6 +302,22 @@ export function RpQueue() {
   useEffect(() => {
     const timer = window.setTimeout(loadQueue, 0);
     return () => window.clearTimeout(timer);
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+    getRpRewardGuidelines().then(({ data, error }) => {
+      if (!active || error || !data?.length) return;
+      setGuidelines(Object.fromEntries(data.map((row) => [
+        row.submission_type,
+        {
+          rp: row.recommended_rp,
+          favor: row.recommended_favor,
+          note: row.note,
+        },
+      ])));
+    });
+    return () => { active = false; };
   }, []);
 
   const filteredSubmissions = useMemo(() => {
@@ -347,18 +386,20 @@ export function RpQueue() {
                 onChange={(event) => setSearch(event.target.value)}
               />
             </div>
-            <div className="queue-filters">
-              {filters.map((item) => (
-                <button
-                  type="button"
-                  key={item.id}
-                  className={filter === item.id ? "selected" : ""}
-                  onClick={() => setFilter(item.id)}
-                >
-                  {item.label}
-                </button>
-              ))}
-            </div>
+            <label className="queue-status-filter">
+              <span>สถานะ</span>
+              <select
+                value={filter}
+                onChange={(event) => {
+                  setFilter(event.target.value);
+                  setSelected(null);
+                }}
+              >
+                {filters.map((item) => (
+                  <option key={item.id} value={item.id}>{item.label}</option>
+                ))}
+              </select>
+            </label>
           </div>
           <SubmissionList
             submissions={submissionPages.pageItems}
@@ -380,6 +421,7 @@ export function RpQueue() {
         <ReviewPanel
           key={selected?.id || "empty"}
           submission={selected}
+          guidelines={guidelines}
           onReviewed={() => loadQueue(null, false)}
         />
       </section>

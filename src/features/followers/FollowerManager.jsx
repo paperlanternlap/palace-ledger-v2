@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from "react";
 import {
   BrainCircuit,
   ChevronDown,
-  Compass,
   DoorOpen,
   MapPin,
   Pencil,
@@ -423,81 +422,58 @@ export function FollowerManager() {
 
   return (
     <>
-      <section className="follower-page">
-        <div className="follower-nav-row">
-          <div className="follower-section-tabs">
+      <section className={`follower-page ${section}`}>
+        <header className="follower-page-header">
+          <div className="follower-page-context">
+            <span>ระบบผู้ติดตาม</span>
+            <h2>
+              {section === "registry"
+                ? "ทะเบียนและการจัดสรรผู้ติดตาม"
+                : "พื้นที่และกติกาการสำรวจ"}
+            </h2>
+            <p>
+              {section === "registry"
+                ? "ดูสถานะ เจ้าของ ความสามารถ และพื้นที่เข้าถึงของผู้ติดตาม"
+                : "กำหนดสถานที่ที่ผู้เล่นเลือกสำรวจ Tag ที่เกี่ยวข้อง และโอกาสสำเร็จพื้นฐาน"}
+            </p>
+          </div>
+          <nav className="follower-section-tabs" aria-label="ส่วนจัดการผู้ติดตาม">
             <button
               type="button"
               className={section === "registry" ? "active" : ""}
               onClick={() => setSection("registry")}
             >
-              ทะเบียนผู้ติดตาม
+              <Users size={15} /> ทะเบียนผู้ติดตาม
             </button>
             <button
               type="button"
               className={section === "locations" ? "active" : ""}
               onClick={() => setSection("locations")}
             >
-              จัดการโลเคชั่น
+              <MapPin size={15} /> พื้นที่สำรวจ
             </button>
-            <span>
-              {section === "registry"
-                ? "จัดการเจ้าของ ความสามารถ และพื้นที่เข้าถึง"
-                : "ตั้งค่าพื้นที่ Tag และโอกาสสำเร็จพื้นฐาน"}
-            </span>
-          </div>
-        </div>
+          </nav>
+        </header>
 
         {section === "registry" && (
           <div className="follower-registry-controls">
             <div className="follower-filter-row">
-              <div className="follower-overview" aria-label="กรองตามสถานะ">
-          <button
-            type="button"
-            className={filter === "all" ? "active" : ""}
-            onClick={() => setFilter("all")}
-          >
-            <Users size={18} />
-            <span>ทั้งหมด</span>
-            <strong>{overview.total}</strong>
-          </button>
-          <button
-            type="button"
-            className={filter === "available" ? "active" : ""}
-            onClick={() => setFilter("available")}
-          >
-            <UserRoundCheck size={18} />
-            <span>พร้อมรับสมัคร</span>
-            <strong>{overview.available}</strong>
-          </button>
-          <button
-            type="button"
-            className={filter === "assigned" ? "active" : ""}
-            onClick={() => setFilter("assigned")}
-          >
-            <Users size={18} />
-            <span>มีเจ้าของแล้ว</span>
-            <strong>{overview.assigned}</strong>
-          </button>
-          <button
-            type="button"
-            className={filter === "on_mission" ? "active" : ""}
-            onClick={() => setFilter("on_mission")}
-          >
-            <Compass size={18} />
-            <span>กำลังสำรวจ</span>
-            <strong>{overview.onMission}</strong>
-          </button>
-          <button
-            type="button"
-            className={filter === "unavailable" ? "active" : ""}
-            onClick={() => setFilter("unavailable")}
-          >
-            <DoorOpen size={18} />
-            <span>ใช้งานไม่ได้</span>
-            <strong>{overview.unavailable}</strong>
-          </button>
-              </div>
+              <label className="follower-status-filter">
+                <span>สถานะผู้ติดตาม</span>
+                <select
+                  value={filter}
+                  onChange={(event) => {
+                    setFilter(event.target.value);
+                    setSelected(null);
+                  }}
+                >
+                  <option value="all">ทั้งหมด ({overview.total})</option>
+                  <option value="available">พร้อมรับสมัคร ({overview.available})</option>
+                  <option value="assigned">มีเจ้าของแล้ว ({overview.assigned})</option>
+                  <option value="on_mission">กำลังสำรวจ ({overview.onMission})</option>
+                  <option value="unavailable">ใช้งานไม่ได้ ({overview.unavailable})</option>
+                </select>
+              </label>
               <button
                 type="button"
                 className={`follower-insights-trigger ${showInsights ? "active" : ""}`}

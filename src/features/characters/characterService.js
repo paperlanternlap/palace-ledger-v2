@@ -26,7 +26,7 @@ export function createCharacter(values) {
 }
 
 export async function getCharacterDetails(characterId) {
-  const [inventory, history] = await Promise.all([
+  const [inventory, history, npcAcquaintances] = await Promise.all([
     supabase
       .from("character_inventory")
       .select("*")
@@ -38,9 +38,48 @@ export async function getCharacterDetails(characterId) {
       .eq("character_id", characterId)
       .order("created_at", { ascending: false })
       .limit(50),
+    supabase
+      .from("character_acquisition_channel_unlocks")
+      .select(`
+        id,
+        source,
+        note,
+        unlocked_at,
+        acquisition_channel:acquisition_channels (
+          id,
+          npc_name,
+          npc_role,
+          access_reason,
+          risk_level
+        )
+      `)
+      .eq("character_id", characterId)
+      .order("unlocked_at", { ascending: false }),
   ]);
 
-  return { inventory, history };
+  return { inventory, history, npcAcquaintances };
+}
+
+export function getNpcAcquisitionChannels() {
+  return supabase
+    .from("acquisition_channels")
+    .select("id, npc_name, npc_role, access_reason, unlock_method, risk_level")
+    .eq("active", true)
+    .order("npc_name", { ascending: true });
+}
+
+export function addCharacterNpcAcquaintance({
+  characterId,
+  acquisitionChannelId,
+  source,
+  note,
+}) {
+  return supabase.rpc("unlock_character_acquisition_channel", {
+    p_character_id: characterId,
+    p_acquisition_channel_id: acquisitionChannelId,
+    p_source: source || null,
+    p_note: note || null,
+  });
 }
 
 export async function updateScore({

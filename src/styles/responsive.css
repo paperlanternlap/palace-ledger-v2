@@ -197,43 +197,8 @@
     padding: 15px;
   }
 
-  :is(
-    .status-filters,
-    .queue-filters,
-    .item-request-filters,
-    .mission-filters,
-    .inventory-filters
-  ) {
-    overflow-x: auto;
-    overscroll-behavior-x: contain;
-    scrollbar-width: none;
-  }
-
-  :is(
-    .status-filters,
-    .queue-filters,
-    .item-request-filters,
-    .mission-filters,
-    .inventory-filters
-  )::-webkit-scrollbar {
-    display: none;
-  }
-
-  :is(
-    .status-filters,
-    .queue-filters,
-    .item-request-filters,
-    .mission-filters,
-    .inventory-filters
-  ) button {
-    min-height: 36px;
-    flex: none;
-    white-space: nowrap;
-  }
-
   .character-attribute-filters,
-  .inventory-toolbar,
-  .mission-filters {
+  .inventory-toolbar {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
@@ -361,7 +326,6 @@
 
   .character-attribute-filters,
   .inventory-toolbar,
-  .mission-filters,
   .submission-info,
   .reward-fields,
   .request-info-grid,
@@ -467,6 +431,56 @@
     max-height: 100dvh;
     padding: 20px 16px calc(20px + env(safe-area-inset-bottom));
     border-radius: 20px 20px 0 0;
+  }
+
+  .item-modal.create-item-modal {
+    padding: 0;
+  }
+
+  .create-item-header {
+    align-items: flex-start;
+    padding: 18px 56px 16px 16px;
+  }
+
+  .create-item-header .item-modal-icon {
+    width: 36px;
+    height: 36px;
+  }
+
+  .create-item-header h2 {
+    padding-right: 0;
+  }
+
+  .item-modal form.create-item-form {
+    max-height: calc(100dvh - 106px);
+    padding: 14px 14px 0;
+  }
+
+  .create-item-section,
+  .item-template-editor.create-item-section {
+    grid-template-columns: 1fr;
+    gap: 16px;
+    padding: 18px 0;
+  }
+
+  .create-item-section__heading,
+  .item-template-editor > div.create-item-section__heading:first-child {
+    padding-bottom: 11px;
+  }
+
+  .modal-actions.create-item-actions {
+    margin: 0 -14px;
+    padding: 13px 14px calc(14px + env(safe-area-inset-bottom));
+  }
+
+  .create-item-actions > span {
+    display: none;
+  }
+
+  .create-item-actions > div {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
   }
 
   .modal-close {

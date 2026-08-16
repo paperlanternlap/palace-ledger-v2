@@ -69,27 +69,40 @@
   font-size: 11px;
 }
 
-.queue-filters {
-  display: flex;
-  gap: 6px;
+.queue-status-filter {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
   margin-top: 10px;
-  overflow-x: auto;
 }
 
-.queue-filters button {
-  flex: none;
-  padding: 5px 9px;
+.queue-status-filter > span {
+  color: var(--ink);
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.queue-status-filter select {
+  width: 100%;
+  height: 36px;
+  padding: 0 32px 0 11px;
   border: 1px solid var(--line);
-  border-radius: 99px;
-  color: var(--muted);
-  background: white;
+  border-radius: 8px;
+  color: var(--ink);
+  background-color: white;
+  font: inherit;
   font-size: 11px;
+  cursor: pointer;
 }
 
-.queue-filters button.selected {
-  color: white;
-  border-color: var(--red);
-  background: var(--red);
+.queue-status-filter select:hover,
+.queue-status-filter select:focus {
+  border-color: #c99c94;
+}
+
+.queue-status-filter select:focus {
+  outline: 3px solid rgba(139, 48, 45, .1);
 }
 
 .submission-list {
@@ -465,7 +478,7 @@
 @media (min-width: 1600px) {
   .queue-tools h2 { font-size: 17px; }
   .queue-tools span,
-  .queue-filters button { font-size: 12px; }
+  .queue-status-filter select { font-size: 12px; }
   .submission-row strong { font-size: 15px; }
   .submission-row small,
   .submission-row time { font-size: 12px; }

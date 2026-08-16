@@ -4,26 +4,29 @@ import {
   Compass,
   RefreshCw,
   ScrollText,
+  ShoppingBasket,
 } from "lucide-react";
-import { supabase } from "../../supabase";
+import { getStaffWorkCounts } from "./overviewService";
 
 const workQueues = [
   {
     id: "rp-queue",
     label: "ผลงานรอตรวจ",
-    description: "ตรวจลิงก์ผลงานและบันทึกคะแนน",
     icon: ScrollText,
   },
   {
     id: "item-requests",
     label: "คำร้องที่ต้องทำ",
-    description: "ตรวจการใช้ไอเท็มและงานของแม่งาน",
     icon: ClipboardList,
+  },
+  {
+    id: "acquisition-requests",
+    label: "งานจัดหาไอเท็ม",
+    icon: ShoppingBasket,
   },
   {
     id: "exploration-missions",
     label: "ภารกิจรอตอบ",
-    description: "สุ่มผล สรุปเหตุการณ์ และมอบรางวัล",
     icon: Compass,
   },
 ];
@@ -36,30 +39,11 @@ export function StaffOverview({ onNavigate }) {
   const loadCounts = useCallback(async () => {
     setLoading(true);
     setError("");
-    const [submissions, requests, missions] = await Promise.all([
-      supabase.from("rp_submissions").select("status").limit(500),
-      supabase.from("item_use_requests").select("status").limit(500),
-      supabase
-        .from("follower_explorations")
-        .select("id", { count: "exact", head: true })
-        .eq("status", "exploring"),
-    ]);
-
-    const results = [submissions, requests, missions];
-    if (results.some((result) => result.error)) {
+    const result = await getStaffWorkCounts();
+    if (result.hasError) {
       setError("โหลดจำนวนงานบางส่วนไม่สำเร็จ");
     }
-
-    setCounts({
-      "rp-queue": (submissions.data || []).filter(
-        (item) => item.status === "pending" || item.status === "revision",
-      ).length,
-      "item-requests": (requests.data || []).filter(
-        (item) =>
-          !["completed", "rejected", "cancelled"].includes(item.status),
-      ).length,
-      "exploration-missions": missions.count || 0,
-    });
+    setCounts(result.counts);
     setLoading(false);
   }, []);
 
@@ -96,7 +80,7 @@ export function StaffOverview({ onNavigate }) {
       {error && <p className="overview-error">{error}</p>}
 
       <div className="overview-queue-grid">
-        {workQueues.map(({ id, label, description, icon: Icon }) => (
+        {workQueues.map(({ id, label, icon: Icon }) => (
           <button
             type="button"
             className="overview-queue-card"
@@ -107,7 +91,6 @@ export function StaffOverview({ onNavigate }) {
               <Icon size={21} />
             </span>
             <span className="overview-queue-copy">
-              <small>{description}</small>
               <strong>{label}</strong>
             </span>
             <span className="overview-queue-action">

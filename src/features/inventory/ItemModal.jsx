@@ -1,34 +1,266 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { PackagePlus, Plus, Settings2, Trash2, X } from "lucide-react";
 import {
   adjustItemStock,
   createCatalogItem,
   deleteCatalogItem,
+  getAcquisitionChannels,
   updateCatalogItem,
 } from "./inventoryService";
+import {
+  ACQUISITION_TYPES as acquisitionTypes,
+  DEFAULT_ACQUISITION_SETTINGS as defaultAcquisitionSettings,
+  ITEM_CATEGORIES as itemCategories,
+  normalizeItemTasks as normalizeTasks,
+} from "./itemFormConfig";
 
-const itemCategories = [
-  { value: "general", label: "ของใช้ทั่วไป" },
-  { value: "favor", label: "เพิ่มโปรดปราน" },
-  { value: "medicine", label: "ยาและการรักษา" },
-  { value: "secret", label: "แผนลับ / ใส่ร้าย" },
-  { value: "access", label: "เปิดพื้นที่หรืออีเวนต์" },
-  { value: "defense", label: "ป้องกัน" },
-  { value: "story", label: "ไอเท็มเนื้อเรื่อง" },
-];
+function AcquisitionFields({ value, onChange, sectionNumber, fulfillmentType }) {
+  const [channels, setChannels] = useState([]);
+  const set = (field, nextValue) => {
+    const next = { ...value, [field]: nextValue };
+    if (field === "acquisitionType") {
+      if (nextValue === "palace_stock") {
+        next.autoFulfill = true;
+        next.acquisitionRequiresRoll = false;
+      }
+      if (nextValue === "external_legal") {
+        next.autoFulfill = false;
+        next.acquisitionRequiresRoll = false;
+      }
+      if (nextValue === "restricted") {
+        next.catalogVisibility = "locked";
+        next.autoFulfill = false;
+        next.acquisitionRequiresRoll = true;
+      }
+      if (nextValue === "story_only") {
+        next.catalogVisibility = "staff_only";
+        next.autoFulfill = false;
+        next.acquisitionRequiresRoll = false;
+      }
+      if (
+        ["palace_stock", "external_legal"].includes(nextValue)
+        && value.catalogVisibility === "locked"
+      ) next.catalogVisibility = "public";
+    }
+    onChange(next);
+  };
 
-function normalizeTasks(tasks) {
-  if (!Array.isArray(tasks)) return [];
-  return tasks
-    .map((task) =>
-      typeof task === "string"
-        ? { label: task, type: "staff_action" }
-        : {
-            label: task?.label || "",
-            type: task?.type || "staff_action",
-          },
-    )
-    .filter((task) => task.label);
+  useEffect(() => {
+    let active = true;
+    getAcquisitionChannels().then(({ data }) => {
+      if (active) setChannels(data || []);
+    });
+    return () => { active = false; };
+  }, []);
+
+  const selectedChannel = channels.find(
+    (channel) => channel.id === Number(value.acquisitionChannelId),
+  );
+  return (
+    <fieldset className={`item-template-editor ${sectionNumber ? "create-item-section" : ""}`}>
+      <div className="create-item-section__heading">
+        {sectionNumber && <span className="create-item-section__number">{sectionNumber}</span>}
+        <span>
+          <strong>รายการนี้อยู่ในช่องทางใด</strong>
+          <small>ตัวเลือกนี้กำหนดว่าผู้เล่นจะพบรายการที่ไหน และต้องผ่านเงื่อนไขใด</small>
+        </span>
+      </div>
+      <div className="create-item-section__body">
+      <label>
+        ช่องทางได้รับ
+        <select
+          value={value.acquisitionType}
+          onChange={(event) => set("acquisitionType", event.target.value)}
+        >
+          {acquisitionTypes.map((type) => (
+            <option key={type.value} value={type.value}>{type.label}</option>
+          ))}
+        </select>
+      </label>
+      <div className="item-form-grid">
+        <label>
+          สถานะในหน้าผู้เล่น
+          <select
+            value={value.catalogVisibility}
+            disabled={value.acquisitionType === "story_only"}
+            onChange={(event) => set("catalogVisibility", event.target.value)}
+          >
+            <option value="public" disabled={value.acquisitionType === "restricted"}>
+              เปิดให้เห็นและแลกได้
+            </option>
+            <option value="locked">แสดงไว้ แต่ต้องปลดล็อกก่อน</option>
+            <option value="staff_only">เก็บเป็นฉบับร่าง — ผู้เล่นยังไม่เห็น</option>
+          </select>
+          {value.acquisitionType === "story_only" && (
+            <small>ของจากเนื้อเรื่องจะไม่ปรากฏในหน้าสำหรับแลก</small>
+          )}
+          {value.acquisitionType === "restricted" && (
+            <small>รายการจาก NPC จะแสดงได้เมื่อทีมงานบันทึกว่าตัวละครรู้จัก NPC แล้ว</small>
+          )}
+        </label>
+        <label>
+          โปรดปรานที่ต้องมีอย่างน้อย
+          <input
+            type="number"
+            min="0"
+            value={value.minimumFavor}
+            onChange={(event) => set("minimumFavor", Number(event.target.value) || 0)}
+          />
+          <small>เป็นเงื่อนไขก่อนแลก ไม่ใช่แต้มที่ระบบหักเป็นราคา</small>
+        </label>
+      </div>
+      {value.acquisitionType === "external_legal" && (
+        <div className="create-item-route-note">
+          <strong>ระบบเลือกวิธีจัดหาให้ตามตำแหน่ง</strong>
+          <span>ผู้มีสิทธิ์จะออกคำสั่งจากตำหนัก ส่วนตำแหน่งอื่นจะส่งผ่านหน่วยจัดซื้อ</span>
+        </div>
+      )}
+      {value.acquisitionType === "restricted" && (
+        <>
+          <label>
+            ซื้อจาก NPC คนใด
+            <select
+              required
+              value={value.acquisitionChannelId}
+              onChange={(event) => set("acquisitionChannelId", event.target.value)}
+            >
+              <option value="">เลือก NPC</option>
+              {channels.map((channel) => (
+                <option key={channel.id} value={channel.id}>
+                  {channel.npc_name} · {channel.npc_role}
+                </option>
+              ))}
+            </select>
+          </label>
+          {selectedChannel && (
+            <div className="closed-request-note">
+              <strong>{selectedChannel.npc_name} · {selectedChannel.npc_role}</strong>
+              <p>{selectedChannel.access_reason}</p>
+              <p>แรงจูงใจ: {selectedChannel.motivation}</p>
+              <p>วิธีทำความรู้จัก: {selectedChannel.unlock_method}</p>
+              <p>ความลับของ NPC: {selectedChannel.hidden_secret}</p>
+            </div>
+          )}
+          <label>
+            ระดับความเสี่ยง (1–5)
+            <input
+              type="number"
+              min="1"
+              max="5"
+              value={value.acquisitionRiskLevel}
+              onChange={(event) => set("acquisitionRiskLevel", Number(event.target.value) || 1)}
+            />
+          </label>
+          <label>
+            ผลเมื่อล้มเหลว
+            <textarea
+              rows="2"
+              value={value.failureConsequence}
+              onChange={(event) => set("failureConsequence", event.target.value)}
+            />
+          </label>
+          <label>
+            ผลเมื่อล้มเหลวร้ายแรง
+            <textarea
+              rows="2"
+              value={value.criticalFailureConsequence}
+              onChange={(event) => set("criticalFailureConsequence", event.target.value)}
+            />
+          </label>
+        </>
+      )}
+      {fulfillmentType === "staff_request" ? (
+        <div className="create-item-info-note">
+          <strong>หลังแลก ระบบจะส่งงานให้สต๊าฟ</strong>
+          <span>ระยะเวลาและผลของเหตุการณ์ให้ทีมงานกำหนดตอนดำเนินเรื่อง จึงไม่ต้องตั้งเวลาส่งของหรือการทอยในหน้านี้</span>
+        </div>
+      ) : (
+        <>
+          <div className="item-rule-toggles">
+            {value.acquisitionType === "palace_stock" && (
+              <label>
+                <input
+                  type="checkbox"
+                  checked={value.autoFulfill}
+                  onChange={(event) => set("autoFulfill", event.target.checked)}
+                />
+                <span>
+                  <strong>ส่งเข้าคลังทันที</strong>
+                  <small>เมื่อผู้เล่นกดรับ ระบบจะเพิ่มของให้ทันทีโดยไม่สร้างงานให้สต๊าฟ</small>
+                </span>
+              </label>
+            )}
+            {value.acquisitionType === "restricted" && (
+              <label>
+                <input
+                  type="checkbox"
+                  checked={value.acquisitionRequiresRoll}
+                  onChange={(event) => set("acquisitionRequiresRoll", event.target.checked)}
+                />
+                <span>
+                  <strong>ต้องทอยก่อนรับของ</strong>
+                  <small>ใช้เมื่อตัวละครต้องเสี่ยงเพื่อติดต่อหรือจัดหาของชิ้นนี้</small>
+                </span>
+              </label>
+            )}
+          </div>
+          {value.acquisitionType === "external_legal" && (
+            <div className="create-item-duration">
+              <div>
+                <strong>กำหนดช่วงเวลาส่งเข้าคลัง</strong>
+                <small>ระบบจะสุ่มกำหนดวันส่งมอบ เช่น 1–2 หมายถึงของจะเข้าในอีก 1 หรือ 2 วันจริง</small>
+              </div>
+              <div className="item-form-grid">
+                <label>
+                  อย่างเร็ว (วันจริง)
+                  <input
+                    type="number"
+                    min="0"
+                    value={value.fulfillmentDaysMin}
+                    onChange={(event) => set("fulfillmentDaysMin", Number(event.target.value) || 0)}
+                  />
+                </label>
+                <label>
+                  ไม่เกิน (วันจริง)
+                  <input
+                    type="number"
+                    min={value.fulfillmentDaysMin}
+                    value={value.fulfillmentDaysMax}
+                    onChange={(event) => set("fulfillmentDaysMax", Number(event.target.value) || 0)}
+                  />
+                </label>
+              </div>
+            </div>
+          )}
+          {value.acquisitionType === "palace_stock" && !value.autoFulfill && (
+            <div className="create-item-info-note">
+              <strong>รายการนี้จะส่งให้สต๊าฟตรวจ</strong>
+              <span>ระบบจะไม่กำหนดวันส่งของอัตโนมัติ สต๊าฟเป็นผู้อนุมัติและเพิ่มของให้ภายหลัง</span>
+            </div>
+          )}
+          {value.acquisitionType === "restricted" && (
+            <div className="create-item-info-note">
+              <strong>หลังเจรจาสำเร็จจะเข้าสู่ขั้นตอนจัดหา</strong>
+              <span>ระบบยังไม่กำหนดวันรับของอัตโนมัติ สต๊าฟเป็นผู้ดำเนินผลและส่งของให้ภายหลัง</span>
+            </div>
+          )}
+          {value.acquisitionRequiresRoll && (
+            <label>
+              โอกาสสำเร็จพื้นฐาน (%)
+              <input
+                type="number"
+                min="5"
+                max="95"
+                value={value.acquisitionSuccessPercent}
+                onChange={(event) => set("acquisitionSuccessPercent", Number(event.target.value) || 70)}
+              />
+            </label>
+          )}
+        </>
+      )}
+      </div>
+    </fieldset>
+  );
 }
 
 export function CreateItemModal({ onClose, onSaved }) {
@@ -37,12 +269,35 @@ export function CreateItemModal({ onClose, onSaved }) {
   const [cost, setCost] = useState(0);
   const [priceCurrency, setPriceCurrency] = useState("rp");
   const [fulfillmentType, setFulfillmentType] = useState("inventory");
-  const [shopAvailable, setShopAvailable] = useState(false);
   const [isLimited, setIsLimited] = useState(false);
   const [stockQuantity, setStockQuantity] = useState(0);
   const [lowStockThreshold, setLowStockThreshold] = useState(5);
+  const [acquisition, setAcquisition] = useState(() => ({
+    ...defaultAcquisitionSettings,
+  }));
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const shopAvailable = acquisition.catalogVisibility === "public"
+    && acquisition.acquisitionType !== "story_only";
+
+  const hasUnsavedChanges = Boolean(
+    name.trim()
+      || description.trim()
+      || Number(cost)
+      || priceCurrency !== "rp"
+      || fulfillmentType !== "inventory"
+      || isLimited
+      || JSON.stringify(acquisition) !== JSON.stringify(defaultAcquisitionSettings),
+  );
+
+  function requestClose() {
+    if (submitting) return;
+    if (
+      hasUnsavedChanges
+      && !window.confirm("ยังไม่ได้บันทึกรายการนี้ ต้องการปิดและทิ้งข้อมูลที่กรอกหรือไม่")
+    ) return;
+    onClose();
+  }
 
   async function handleSubmit(event) {
     event.preventDefault();
@@ -58,6 +313,7 @@ export function CreateItemModal({ onClose, onSaved }) {
       isLimited,
       stockQuantity: Number(stockQuantity) || 0,
       lowStockThreshold: Number(lowStockThreshold) || 0,
+      ...acquisition,
     });
     setSubmitting(false);
 
@@ -73,140 +329,193 @@ export function CreateItemModal({ onClose, onSaved }) {
   }
 
   return (
-    <div className="modal-backdrop" role="presentation" onMouseDown={onClose}>
+    <div className="modal-backdrop" role="presentation" onMouseDown={requestClose}>
       <section
-        className="item-modal"
+        className="item-modal wide create-item-modal"
         role="dialog"
         aria-modal="true"
         aria-labelledby="create-item-title"
+        aria-describedby="create-item-description"
         onMouseDown={(event) => event.stopPropagation()}
       >
-        <button type="button" className="modal-close" onClick={onClose}>
+        <button type="button" className="modal-close" aria-label="ปิดหน้าต่าง" onClick={requestClose}>
           <X size={20} />
         </button>
-        <div className="item-modal-icon">
-          <PackagePlus size={21} />
-        </div>
-        <h2 id="create-item-title">สร้างไอเท็มใหม่</h2>
-        <p>เพิ่มไอเท็มเข้าสู่คลังกลางสำหรับแจกหรือใช้ในอีเวนต์</p>
-
-        <form onSubmit={handleSubmit}>
-          <label>
-            ชื่อไอเท็ม
-            <input
-              required
-              value={name}
-              placeholder="เช่น หยกมงคล"
-              onChange={(event) => setName(event.target.value)}
-            />
-          </label>
-          <label>
-            รายละเอียด
-            <textarea
-              rows="3"
-              value={description}
-              placeholder="คำอธิบายหรือวิธีใช้..."
-              onChange={(event) => setDescription(event.target.value)}
-            />
-          </label>
-
-          <div className="item-form-grid">
-            <label>
-              ราคา
-              <input
-                type="number"
-                min="0"
-                value={cost}
-                onChange={(event) => setCost(event.target.value)}
-              />
-            </label>
-            <label>
-              ใช้แต้ม
-              <select
-                value={priceCurrency}
-                onChange={(event) => setPriceCurrency(event.target.value)}
-              >
-                <option value="rp">RP</option>
-                <option value="favor">โปรดปราน</option>
-              </select>
-            </label>
+        <header className="create-item-header">
+          <div className="item-modal-icon">
+            <PackagePlus size={21} />
           </div>
+          <div>
+            <span className="create-item-eyebrow">คลังไอเท็ม</span>
+            <h2 id="create-item-title">เพิ่มรายการใหม่</h2>
+            <p id="create-item-description">กำหนดสิ่งที่ผู้เล่นเห็น วิธีแลก และสิ่งที่ระบบต้องทำหลังแลก</p>
+          </div>
+        </header>
 
-          <label>
-            ซื้อแล้วได้รับ
-            <select
-              value={fulfillmentType}
-              onChange={(event) => setFulfillmentType(event.target.value)}
-            >
-              <option value="inventory">ไอเท็มเข้าคลัง — กดใช้ภายหลัง</option>
-              <option value="staff_request">
-                เหตุการณ์พิเศษ — สร้างงานให้สต๊าฟทันที
-              </option>
-            </select>
-          </label>
-
-          <label className="stock-toggle">
-            <input
-              type="checkbox"
-              checked={shopAvailable}
-              onChange={(event) => setShopAvailable(event.target.checked)}
-            />
-            <span>
-              <strong>แสดงในร้านลูกมู</strong>
-              <small>ปิดไว้สำหรับของเนื้อเรื่องหรือของที่แจกโดยสต๊าฟเท่านั้น</small>
-            </span>
-          </label>
-
-          <label className="stock-toggle">
-            <input
-              type="checkbox"
-              checked={isLimited}
-              onChange={(event) => setIsLimited(event.target.checked)}
-            />
-            <span>
-              <strong>จำกัดจำนวน</strong>
-              <small>เปิดเมื่อต้องการควบคุมสต็อกและป้องกันแจกเกิน</small>
-            </span>
-          </label>
-
-          {isLimited && (
-            <div className="item-number-grid">
-              <label>
-                จำนวนเริ่มต้น
-                <input
-                  type="number"
-                  min="0"
-                  value={stockQuantity}
-                  onChange={(event) => setStockQuantity(event.target.value)}
-                />
-              </label>
-              <label>
-                แจ้งเตือนเมื่อเหลือ
-                <input
-                  type="number"
-                  min="0"
-                  value={lowStockThreshold}
-                  onChange={(event) =>
-                    setLowStockThreshold(event.target.value)
-                  }
-                />
-              </label>
+        <form className="create-item-form" onSubmit={handleSubmit}>
+          <fieldset className="create-item-section">
+            <div className="create-item-section__heading">
+              <span className="create-item-section__number">1</span>
+              <span>
+                <strong>ข้อมูลที่ผู้เล่นเห็น</strong>
+                <small>ใช้ชื่อและคำอธิบายที่อ่านเข้าใจได้โดยไม่ต้องรู้คำศัพท์ของระบบ</small>
+              </span>
             </div>
-          )}
+            <div className="create-item-section__body">
+              <label>
+                ชื่อรายการ
+                <input
+                  required
+                  autoFocus
+                  value={name}
+                  placeholder="เช่น หยกมงคล"
+                  onChange={(event) => setName(event.target.value)}
+                />
+              </label>
+              <label>
+                <span className="create-item-label-row">
+                  คำอธิบายสำหรับผู้เล่น
+                  <small>ไม่บังคับ</small>
+                </span>
+                <textarea
+                  rows="3"
+                  value={description}
+                  placeholder="บอกว่ารายการนี้คืออะไร ใช้ทำอะไร หรือมีเงื่อนไขใด"
+                  onChange={(event) => setDescription(event.target.value)}
+                />
+              </label>
 
-          {error && <p className="inventory-error">{error}</p>}
+              <fieldset className="item-choice-fieldset">
+                <legend>หลังผู้เล่นแลกสำเร็จ</legend>
+                <div className="item-choice-grid">
+                  <label className={fulfillmentType === "inventory" ? "selected" : ""}>
+                    <input
+                      type="radio"
+                      name="fulfillmentType"
+                      value="inventory"
+                      checked={fulfillmentType === "inventory"}
+                      onChange={(event) => setFulfillmentType(event.target.value)}
+                    />
+                    <span>
+                      <strong>เก็บเป็นไอเท็ม</strong>
+                      <small>เพิ่มเข้าคลังตัวละคร เพื่อนำไปใช้ภายหลัง</small>
+                    </span>
+                  </label>
+                  <label className={fulfillmentType === "staff_request" ? "selected" : ""}>
+                    <input
+                      type="radio"
+                      name="fulfillmentType"
+                      value="staff_request"
+                      checked={fulfillmentType === "staff_request"}
+                      onChange={(event) => setFulfillmentType(event.target.value)}
+                    />
+                    <span>
+                      <strong>เปิดเหตุการณ์พิเศษ</strong>
+                      <small>หักแต้มแล้วส่งเข้าคิวให้สต๊าฟดำเนินเรื่อง</small>
+                    </span>
+                  </label>
+                </div>
+              </fieldset>
+            </div>
+          </fieldset>
 
-          <div className="modal-actions">
-            <button type="button" className="secondary-button" onClick={onClose}>
-              ยกเลิก
-            </button>
-            <button
-              type="submit"
-              className="primary-button"
-              disabled={submitting || !name.trim()}
-            >
-              {submitting ? "กำลังสร้าง..." : "สร้างไอเท็ม"}
-            </button>
+          <AcquisitionFields
+            value={acquisition}
+            onChange={setAcquisition}
+            sectionNumber="2"
+            fulfillmentType={fulfillmentType}
+          />
+
+          <fieldset className="create-item-section">
+            <div className="create-item-section__heading">
+              <span className="create-item-section__number">3</span>
+              <span>
+                <strong>ราคาและจำนวน</strong>
+                <small>กำหนดแต้มที่หักจริง และเลือกว่าจะควบคุมจำนวนคงเหลือหรือไม่</small>
+              </span>
+            </div>
+            <div className="create-item-section__body">
+              <div className="item-form-grid item-price-grid">
+              <label>
+                แต้มที่ใช้ต่อครั้ง
+                <input
+                  type="number"
+                  min="0"
+                  inputMode="numeric"
+                  value={cost}
+                  onChange={(event) => setCost(event.target.value)}
+                />
+              </label>
+              <label>
+                หักจาก
+                <select
+                  value={priceCurrency}
+                  onChange={(event) => setPriceCurrency(event.target.value)}
+                >
+                  <option value="rp">แต้ม RP</option>
+                  <option value="favor">แต้มโปรดปราน</option>
+                </select>
+              </label>
+              </div>
+
+              <div className="create-item-toggle-list single">
+                <label className="stock-toggle">
+                <input
+                  type="checkbox"
+                  checked={isLimited}
+                  onChange={(event) => setIsLimited(event.target.checked)}
+                />
+                <span>
+                  <strong>จำกัดจำนวนที่แลกได้</strong>
+                  <small>เมื่อจำนวนเหลือศูนย์ ผู้เล่นจะกดแลกไม่ได้</small>
+                </span>
+                </label>
+              </div>
+
+              {isLimited && (
+                <div className="item-number-grid create-item-stock-fields">
+                <label>
+                  จำนวนที่มี
+                  <input
+                    type="number"
+                    min="0"
+                    inputMode="numeric"
+                    value={stockQuantity}
+                    onChange={(event) => setStockQuantity(event.target.value)}
+                  />
+                </label>
+                <label>
+                  แจ้งเตือนเมื่อเหลือ
+                  <input
+                    type="number"
+                    min="0"
+                    inputMode="numeric"
+                    value={lowStockThreshold}
+                    onChange={(event) => setLowStockThreshold(event.target.value)}
+                  />
+                  <small>ทีมงานจะเห็นสถานะใกล้หมดเมื่อเหลือเท่ากับหรือต่ำกว่านี้</small>
+                </label>
+                </div>
+              )}
+            </div>
+          </fieldset>
+
+          {error && <p className="inventory-error create-item-error" role="alert">{error}</p>}
+
+          <div className="modal-actions create-item-actions">
+            <span>ตรวจสอบข้อมูลให้ครบก่อนเปิดให้ผู้เล่นแลก</span>
+            <div>
+              <button type="button" className="secondary-button" onClick={requestClose}>
+                ยกเลิก
+              </button>
+              <button
+                type="submit"
+                className="primary-button"
+                disabled={submitting || !name.trim()}
+              >
+                {submitting ? "กำลังบันทึก..." : "เพิ่มรายการ"}
+              </button>
+            </div>
           </div>
         </form>
       </section>
@@ -335,6 +644,21 @@ export function EditItemModal({ item, onClose, onSaved }) {
     Boolean(item.requires_roll),
   );
   const [active, setActive] = useState(item.active !== false);
+  const [acquisition, setAcquisition] = useState({
+    acquisitionType: item.acquisition_type || "palace_stock",
+    catalogVisibility: item.catalog_visibility || "public",
+    acquisitionRequiresRoll: Boolean(item.acquisition_requires_roll),
+    acquisitionSuccessPercent: item.acquisition_success_percent || 70,
+    minimumFavor: item.minimum_favor || 0,
+    commandFavorThreshold: item.command_favor_threshold || 20,
+    fulfillmentDaysMin: item.fulfillment_days_min || 0,
+    fulfillmentDaysMax: item.fulfillment_days_max ?? 1,
+    autoFulfill: item.auto_fulfill !== false,
+    acquisitionChannelId: item.acquisition_channel_id || "",
+    acquisitionRiskLevel: item.acquisition_risk_level || 1,
+    failureConsequence: item.failure_consequence || "",
+    criticalFailureConsequence: item.critical_failure_consequence || "",
+  });
   const [tasks, setTasks] = useState(() =>
     normalizeTasks(item.action_template),
   );
@@ -385,6 +709,7 @@ export function EditItemModal({ item, onClose, onSaved }) {
       requiresRoll,
       actionTemplate: cleanTasks,
       active,
+      ...acquisition,
     });
     setSubmitting(false);
 
@@ -401,7 +726,7 @@ export function EditItemModal({ item, onClose, onSaved }) {
 
   async function handleDelete() {
     const confirmed = window.confirm(
-      `ลบ "${item.name}" ออกจากแคตตาล็อกถาวรใช่ไหม\nหากมีประวัติการใช้งาน ระบบจะไม่อนุญาตให้ลบ`,
+      `ลบ "${item.name}" ออกจากทะเบียนสิ่งของถาวรใช่ไหม\nหากมีประวัติการใช้งาน ระบบจะไม่อนุญาตให้ลบ`,
     );
     if (!confirmed) return;
 
@@ -475,7 +800,7 @@ export function EditItemModal({ item, onClose, onSaved }) {
 
           <div className="item-form-grid">
             <label>
-              ราคา
+              แต้มที่ใช้
               <input
                 type="number"
                 min="0"
@@ -484,29 +809,31 @@ export function EditItemModal({ item, onClose, onSaved }) {
               />
             </label>
             <label>
-              ใช้แต้ม
+              ชำระด้วย
               <select
                 value={priceCurrency}
                 onChange={(event) => setPriceCurrency(event.target.value)}
               >
-                <option value="rp">RP</option>
-                <option value="favor">โปรดปราน</option>
+                <option value="rp">แต้ม RP</option>
+                <option value="favor">แต้มโปรดปราน</option>
               </select>
             </label>
           </div>
 
           <label>
-            ซื้อแล้วได้รับ
+            เมื่อแลกสำเร็จ
             <select
               value={fulfillmentType}
               onChange={(event) => setFulfillmentType(event.target.value)}
             >
-              <option value="inventory">ไอเท็มเข้าคลัง — กดใช้ภายหลัง</option>
+              <option value="inventory">รับเป็นไอเท็ม — เก็บไว้ในคลังผู้เล่น</option>
               <option value="staff_request">
-                เหตุการณ์พิเศษ — สร้างงานให้สต๊าฟทันที
+                เปิดเหตุการณ์พิเศษ — ส่งงานให้สต๊าฟดำเนินเรื่อง
               </option>
             </select>
           </label>
+
+          <AcquisitionFields value={acquisition} onChange={setAcquisition} />
 
           <label className="stock-toggle">
             <input
@@ -515,9 +842,9 @@ export function EditItemModal({ item, onClose, onSaved }) {
               onChange={(event) => setShopAvailable(event.target.checked)}
             />
             <span>
-              <strong>แสดงในร้านลูกมู</strong>
+              <strong>เปิดให้ผู้เล่นเห็นและเลือกรับ</strong>
               <small>
-                ลูกมูจะเห็นและซื้อได้เฉพาะเมื่อเปิดตัวเลือกนี้และไอเท็มยังใช้งานอยู่
+                ผู้เล่นจะเห็นรายการถูกกฎทั่วไปเมื่อเปิดตัวเลือกนี้และไอเท็มยังใช้งานอยู่
               </small>
             </span>
           </label>

@@ -4,6 +4,7 @@ import {
   ChevronLeft,
   ChevronRight,
   PackageOpen,
+  UserRoundCheck,
 } from "lucide-react";
 import { EmptyState } from "../../components/ui/EmptyState";
 import { formatNumber } from "./utils";
@@ -104,6 +105,8 @@ export function CharacterDetail({
   onPromote,
   onDemote,
   onSpecialAppointment,
+  npcAcquaintances = [],
+  onManageNpcAcquaintances,
 }) {
   if (!character) {
     return (
@@ -209,6 +212,36 @@ export function CharacterDetail({
           </div>
         </section>
       </div>
+
+      <section className="character-npc-card">
+        <div className="character-npc-card__heading">
+          <div>
+            <UserRoundCheck size={18} />
+            <span>
+              <strong>NPC ที่รู้จัก</strong>
+              <small>ผู้ที่ตัวละครสามารถติดต่อเพื่อเจรจาซื้อสิ่งของ</small>
+            </span>
+          </div>
+          <button type="button" onClick={onManageNpcAcquaintances}>
+            + เพิ่ม NPC ที่รู้จัก
+          </button>
+        </div>
+        {loading ? (
+          <p className="muted">กำลังโหลด...</p>
+        ) : npcAcquaintances.length ? (
+          <div className="character-npc-list">
+            {npcAcquaintances.map((entry) => (
+              <article key={entry.id}>
+                <strong>{entry.acquisition_channel?.npc_name || "ไม่พบข้อมูล NPC"}</strong>
+                <span>{entry.acquisition_channel?.npc_role || "—"}</span>
+                {entry.source && <small>รู้จักจาก: {entry.source}</small>}
+              </article>
+            ))}
+          </div>
+        ) : (
+          <p className="character-npc-empty">ตัวละครนี้ยังไม่มี NPC ที่รู้จัก</p>
+        )}
+      </section>
 
       <div className="detail-sections">
         <section className="sub-card">

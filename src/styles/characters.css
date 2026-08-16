@@ -383,6 +383,127 @@
   background: #fffaf0;
 }
 
+.character-npc-card {
+  margin-top: 10px;
+  padding: 12px;
+  border: 1px solid #ddcfc0;
+  border-radius: 12px;
+  background: #fcf7f1;
+}
+
+.character-npc-card__heading,
+.character-npc-card__heading > div {
+  display: flex;
+  align-items: center;
+}
+
+.character-npc-card__heading {
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.character-npc-card__heading > div {
+  gap: 8px;
+  color: var(--red);
+}
+
+.character-npc-card__heading span {
+  display: flex;
+  flex-direction: column;
+}
+
+.character-npc-card__heading strong {
+  color: var(--ink);
+  font-size: 12px;
+}
+
+.character-npc-card__heading small {
+  margin-top: 1px;
+  color: var(--muted);
+  font-size: 9px;
+}
+
+.character-npc-card__heading button {
+  min-height: 34px;
+  padding: 7px 11px;
+  border: 1px solid #d7b8b0;
+  border-radius: 8px;
+  color: var(--red);
+  background: white;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.character-npc-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 7px;
+  margin-top: 10px;
+}
+
+.character-npc-list article {
+  display: flex;
+  flex-direction: column;
+  padding: 9px 11px;
+  border: 1px solid #e5d8cb;
+  border-radius: 9px;
+  background: white;
+}
+
+.character-npc-list article strong {
+  color: var(--ink);
+  font-size: 12px;
+}
+
+.character-npc-list article span {
+  color: #78685f;
+  font-size: 10px;
+}
+
+.character-npc-list article small {
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 9px;
+}
+
+.character-npc-empty {
+  margin: 9px 0 0;
+  color: var(--muted);
+  font-size: 10px;
+}
+
+.npc-acquaintance-modal {
+  width: min(560px, 100%);
+}
+
+.npc-acquaintance-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 11px 12px;
+  border: 1px solid #e4d4c6;
+  border-radius: 9px;
+  background: #fbf6ef;
+}
+
+.npc-acquaintance-preview strong {
+  color: var(--ink);
+  font-size: 13px;
+}
+
+.npc-acquaintance-preview span,
+.npc-acquaintance-preview small {
+  color: #76665d;
+  font-size: 10px;
+}
+
+.npc-acquaintance-preview p {
+  margin: 4px 0;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.5;
+}
+
 .special-appointment-modal {
   width: min(620px, 100%);
 }
@@ -573,6 +694,15 @@
 
   .quick-actions button {
     min-height: 58px;
+  }
+
+  .character-npc-card__heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .character-npc-card__heading button {
+    width: 100%;
   }
 }
 
