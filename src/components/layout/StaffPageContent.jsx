@@ -24,6 +24,10 @@ const FollowerMissionQueue = lazyNamed(
   () => import("../../features/followers/FollowerMissionQueue"),
   "FollowerMissionQueue",
 );
+const FollowerLocationManager = lazyNamed(
+  () => import("../../features/followers/FollowerLocationManager"),
+  "FollowerLocationManager",
+);
 const InventoryManager = lazyNamed(
   () => import("../../features/inventory/InventoryManager"),
   "InventoryManager",
@@ -70,6 +74,9 @@ export function StaffPageContent({ activePage, onNavigate, characterWorkspace })
       break;
     case "exploration-missions":
       content = <FollowerMissionQueue />;
+      break;
+    case "exploration-map":
+      content = <FollowerLocationManager />;
       break;
     case "followers":
       content = <FollowerManager />;

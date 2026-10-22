@@ -517,6 +517,9 @@
   font: 700 18px "Noto Serif Thai", serif;
 }
 
+.mission-roll-result .mission-drop-number { margin-top: 5px; color: #6b5441; font-size: 11px; }
+.mission-roll-result .mission-drop-number b { margin-left: 4px; color: #843632; font-size: 18px; }
+
 .mission-roll-result details {
   margin-top: 4px;
   text-align: right;
@@ -548,6 +551,16 @@
   border-color: #e2c1bd;
   background: #fff3f1;
 }
+
+.mission-location-note {
+  padding: 12px 14px;
+  border: 1px solid #e3d5c1;
+  border-radius: 9px;
+  background: #fffaf1;
+}
+
+.mission-location-note strong { color: #654b34; font-size: 12px; }
+.mission-location-note p { margin: 6px 0 0; color: #51463b; font-size: 12px; line-height: 1.6; white-space: pre-wrap; overflow-wrap: anywhere; }
 
 .mission-roll-hint {
   margin: -3px 0 0;

@@ -209,10 +209,6 @@ function FollowerDetail({ follower, busy, onAssign, onEdit, onRelease }) {
           <span>ราคาแต้ม</span>
           <strong>{Number(follower.cost || 0).toLocaleString("th-TH")}</strong>
         </div>
-        <div>
-          <span>ภารกิจต่อสัปดาห์</span>
-          <strong>{follower.weekly_mission_limit}</strong>
-        </div>
       </div>
 
       <div className="follower-capabilities">

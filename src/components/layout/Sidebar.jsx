@@ -8,6 +8,7 @@ export function Sidebar({
   onNavigate,
   onSignOut,
   loggingOut,
+  staffName,
 }) {
   return (
     <aside className="sidebar">
@@ -37,6 +38,10 @@ export function Sidebar({
       </nav>
 
       <div className="sidebar-foot">
+        <div className="sidebar-staff">
+          <span>เข้าสู่ระบบในชื่อ</span>
+          <strong className="sidebar-staff-name" title={staffName}>{staffName}</strong>
+        </div>
         <button type="button" onClick={onSignOut} disabled={loggingOut}>
           <LogOut size={16} />
           <span>{loggingOut ? "กำลังออก..." : "ออกจากระบบ"}</span>

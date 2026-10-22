@@ -6,8 +6,8 @@ import {
   cancelFollowerExploration,
   getFollowerExplorations,
   getFollowerRewardItems,
+  getExplorationLocationNotes,
   resolveFollowerExploration,
-  rollFollowerExploration,
 } from "./followerService";
 
 const outcomeLabels = {
@@ -44,12 +44,15 @@ export function FollowerMissionQueue({ onMissionChanged }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [itemError, setItemError] = useState("");
+  const [locationNotes, setLocationNotes] = useState({});
+  const [noteError, setNoteError] = useState("");
 
   async function loadMissions(preferredId) {
     setLoading(true);
-    const [missionResult, itemResult] = await Promise.all([
+    const [missionResult, itemResult, noteResult] = await Promise.all([
       getFollowerExplorations(),
       getFollowerRewardItems(),
+      getExplorationLocationNotes(),
     ]);
     if (missionResult.error) {
       setMissions([]);
@@ -80,6 +83,13 @@ export function FollowerMissionQueue({ onMissionChanged }) {
           ? ""
           : "ยังไม่มีไอเท็มที่เปิดใช้งานในคลัง",
       );
+    }
+    if (noteResult.error) {
+      setLocationNotes({});
+      setNoteError("โหลดโน้ตพื้นที่ไม่สำเร็จ กรุณาตรวจว่าติดตั้ง SQL ช่องโน้ตแอดมินแล้ว");
+    } else {
+      setLocationNotes(Object.fromEntries((noteResult.data || []).map((entry) => [String(entry.location_id), entry.note])));
+      setNoteError("");
     }
     setLoading(false);
   }
@@ -117,9 +127,7 @@ export function FollowerMissionQueue({ onMissionChanged }) {
       null,
     [missionPages.pageItems, selectedId],
   );
-  const hasRolled =
-    selected?.resolution_roll != null &&
-    Boolean(selected?.resolution_outcome);
+  const hasRolled = Boolean(selected?.resolution_outcome);
   const activeCount = missions.filter(
     (mission) => mission.status === "exploring",
   ).length;
@@ -159,35 +167,6 @@ export function FollowerMissionQueue({ onMissionChanged }) {
     setRewardItemId("");
     await loadMissions();
     await onMissionChanged?.();
-  }
-
-  async function handleRoll() {
-    if (!selected || selected.resolution_roll) return;
-    const confirmed = window.confirm(
-      `สุ่มผลภารกิจที่โอกาสสำเร็จ ${selected.success_chance_percent}% ใช่ไหม\nผลจะถูกบันทึกและสุ่มซ้ำไม่ได้`,
-    );
-    if (!confirmed) return;
-
-    setBusy(true);
-    setError("");
-    const result = await rollFollowerExploration(selected.id);
-    setBusy(false);
-    if (result.error) {
-      const missingRollMigration =
-        result.error.code === "PGRST202" ||
-        result.error.message?.includes("roll_follower_exploration") ||
-        result.error.message?.includes("schema cache");
-      setError(
-        missingRollMigration
-          ? "ยังไม่ได้ติดตั้งระบบสุ่มผลบน Supabase กรุณารัน migration 20260731000000_add_follower_mission_rolls.sql"
-          : result.error.message?.includes("already been rolled")
-            ? "ภารกิจนี้สุ่มผลไปแล้ว"
-            : result.error.message || "สุ่มผลไม่สำเร็จ",
-      );
-      await loadMissions(selected.id);
-      return;
-    }
-    await loadMissions(selected.id);
   }
 
   async function handleCancel() {
@@ -249,7 +228,7 @@ export function FollowerMissionQueue({ onMissionChanged }) {
               >
                 <Compass size={17} />
                 <span>
-                  <strong>{mission.follower?.name || "ผู้ติดตาม"}</strong>
+                  <strong>{mission.follower?.name || "ไปด้วยตัวเอง"}</strong>
                   <small>
                     {missionLocationName(mission)} · {mission.character?.character_name}
                   </small>
@@ -290,7 +269,7 @@ export function FollowerMissionQueue({ onMissionChanged }) {
                 <span className={`mission-status ${selected.status}`}>
                   {selected.status === "exploring" ? "กำลังสำรวจ" : selected.status === "completed" ? "สรุปผลแล้ว" : "ยกเลิก"}
                 </span>
-                <h2>{selected.follower?.name} → {missionLocationName(selected)}</h2>
+                <h2>{selected.follower?.name || "ไปด้วยตัวเอง"} → {missionLocationName(selected)}</h2>
                 <p>{selected.objective || "สำรวจและรวบรวมข้อมูลทั่วไป"}</p>
                 <div className="mission-location-meta">
                   {selected.location?.category && (
@@ -328,38 +307,34 @@ export function FollowerMissionQueue({ onMissionChanged }) {
                   <div>
                     <span>โอกาสสำเร็จ</span>
                     <strong>{selected.success_chance_percent ?? 60}%</strong>
-                    <small>
-                      พื้นฐาน 60% · Talent{" "}
-                      {selected.suitability_percent > 0 ? "+" : ""}
-                      {selected.suitability_percent || 0}%
-                    </small>
+                    <small>ฐาน {selected.location?.base_success_percent ?? 60}% · Talent {selected.suitability_percent > 0 ? "+" : ""}{selected.suitability_percent || 0}% ของฐาน</small>
                   </div>
                   {hasRolled ? (
                     <div className="mission-roll-result">
-                      <span>ผลการสุ่ม</span>
+                      <span>{selected.roll_origin === 'player' ? 'ผลที่ผู้เล่นส่งมา' : 'ผลการสุ่มเดิม'}</span>
                       <strong>{outcomeLabels[selected.resolution_outcome]}</strong>
-                      <details>
+                      {selected.resolution_roll != null ? <details>
                         <summary>รายละเอียดการสุ่ม</summary>
                         <small>
-                          หมายเลขตรวจสอบ {selected.resolution_roll} · โอกาสสำเร็จ{" "}
-                          {selected.success_chance_percent}%
+                          สุ่มได้ {selected.resolution_roll} จาก 100 · สำเร็จเมื่อได้ 1–{selected.success_chance_percent}
                         </small>
-                      </details>
+                      </details> : <small>ระบบสุ่มตามโอกาสสำเร็จตอนผู้เล่นกดสำรวจ</small>}
+                      {['success', 'critical_success'].includes(selected.resolution_outcome) && (selected.drop_roll != null
+                        ? <span className="mission-drop-number">เลขไอเท็ม d100 <b>{selected.drop_roll}</b></span>
+                        : <small>ยังไม่มีเลข d100 · ให้ติดตั้ง SQL อัปเดตระบบสำรวจ</small>)}
                     </div>
                   ) : (
-                    <button type="button" disabled={busy} onClick={handleRoll}>
-                      <Sparkles size={17} />
-                      สุ่มผลภารกิจ
-                    </button>
+                    <span className="mission-roll-hint">งานเดิมยังไม่มีผลสุ่ม · ให้ติดตั้ง SQL อัปเดตระบบสำรวจ</span>
                   )}
                 </div>
 
-                {!hasRolled && (
-                  <p className="mission-roll-hint">
-                    ระบบจะสุ่มผลตามโอกาสสำเร็จและบันทึกผลทันที
-                    โดยไม่สามารถสุ่มซ้ำได้
-                  </p>
+                {selected.location_id && (locationNotes[String(selected.location_id)] || noteError) && (
+                  <aside className="mission-location-note">
+                    <strong>โน้ตสถานที่สำหรับสต๊าฟ</strong>
+                    <p>{locationNotes[String(selected.location_id)] || noteError}</p>
+                  </aside>
                 )}
+
                 {error && <p className="mission-roll-error">{error}</p>}
 
                 {hasRolled && (
@@ -394,7 +369,7 @@ export function FollowerMissionQueue({ onMissionChanged }) {
                     </small>
                     <select
                       value={rewardItemId}
-                      disabled={!items.length}
+                      disabled={!items.length || (selected.request_id && !['success', 'critical_success'].includes(selected.resolution_outcome))}
                       onChange={(event) => setRewardItemId(event.target.value)}
                     >
                       <option value="">
@@ -418,6 +393,7 @@ export function FollowerMissionQueue({ onMissionChanged }) {
                     <input
                       type="number"
                       min="1"
+                      max={selected.request_id ? 1 : undefined}
                       disabled={!rewardItemId}
                       value={rewardQuantity}
                       onChange={(event) => setRewardQuantity(event.target.value)}
@@ -433,23 +409,25 @@ export function FollowerMissionQueue({ onMissionChanged }) {
                   <button
                     type="submit"
                     className="primary-button"
-                    disabled={busy || !hasRolled || !summary.trim()}
+                    disabled={busy || !hasRolled || !summary.trim() ||
+                      (selected.roll_origin === 'player' && ['success', 'critical_success'].includes(selected.resolution_outcome) && selected.drop_roll == null)}
                   >
-                    <CheckCircle2 size={15} /> บันทึกผลและส่งผู้ติดตามกลับ
+                    <CheckCircle2 size={15} /> บันทึกผลและมอบรางวัล
                   </button>
                 </div>
               </form>
             ) : (
               <div className="mission-result">
-                {selected.resolution_roll && (
+                {hasRolled && (
                   <div className={`mission-result-roll ${selected.resolution_outcome}`}>
                     <Sparkles size={16} />
                     <span>
-                      ผลการสุ่ม · โอกาสสำเร็จ {selected.success_chance_percent}%
+                      ผลสำรวจ · โอกาสสำเร็จ {selected.success_chance_percent}%
                     </span>
                     <strong>{outcomeLabels[selected.resolution_outcome]}</strong>
                   </div>
                 )}
+                {selected.drop_roll != null && <span>เลขไอเท็ม d100 ที่ผู้เล่นสุ่มได้: <strong>{selected.drop_roll}</strong></span>}
                 <strong>{selected.result_summary}</strong>
                 {selected.result_details && <p>{selected.result_details}</p>}
                 {selected.reward?.name && (

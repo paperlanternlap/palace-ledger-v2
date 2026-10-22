@@ -28,7 +28,7 @@ import {
   getPositionOptions,
 } from "./features/characters/rankOptions";
 
-function StaffApp() {
+function StaffApp({ staff, user }) {
   const [activePage, setActivePage] = useState("dashboard");
   const [characters, setCharacters] = useState([]);
   const [selectedCharacter, setSelectedCharacter] = useState(null);
@@ -158,6 +158,7 @@ function StaffApp() {
       <Sidebar
         activePage={activePage}
         onNavigate={setActivePage}
+        staffName={staff.display_name?.trim() || user.email || "สต๊าฟ"}
         loggingOut={loggingOut}
         onSignOut={async () => {
           setLoggingOut(true);
@@ -385,7 +386,7 @@ function StaffApp() {
 function App() {
   return (
     <StaffGate>
-      <StaffApp />
+      {({ staff, user }) => <StaffApp staff={staff} user={user} />}
     </StaffGate>
   );
 }

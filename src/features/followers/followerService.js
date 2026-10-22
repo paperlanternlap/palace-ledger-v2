@@ -1,4 +1,5 @@
 import { supabase } from "../../supabase";
+import { isMissingMapSchema, locationPayload } from "./locationPayload";
 
 export async function getFollowers() {
   let [followers, characters] = await Promise.all([
@@ -117,46 +118,46 @@ export function getExplorationLocations() {
     .order("sort_order", { ascending: true });
 }
 
-export function getAllExplorationLocations() {
-  return supabase
+export async function getAllExplorationLocations() {
+  const locations = await supabase
     .from("exploration_locations")
     .select("*")
     .order("sort_order", { ascending: true });
+  if (locations.error) return locations;
+  const notes = await supabase.from("exploration_location_notes").select("location_id,note");
+  if (notes.error) return { data: locations.data, error: null, notesError: notes.error };
+  const byId = new Map((notes.data || []).map((entry) => [entry.location_id, entry.note]));
+  return { data: (locations.data || []).map((entry) => ({ ...entry, admin_note: byId.get(entry.id) || "" })), error: null, notesError: null };
 }
 
-export function createExplorationLocation(values) {
+export function saveExplorationLocationNote(locationId, note) {
+  return supabase.from("exploration_location_notes").upsert({
+    location_id: locationId,
+    note,
+    updated_at: new Date().toISOString(),
+  }, { onConflict: "location_id" });
+}
+
+export async function getExplorationSchemaSupport() {
+  const result = await supabase.from("exploration_locations")
+    .select("map_label,self_character_ids").limit(0);
+  if (isMissingMapSchema(result.error)) return { supported: false, error: null };
+  return { supported: !result.error, error: result.error };
+}
+
+export function createExplorationLocation(values, supportsMap = true) {
   return supabase
     .from("exploration_locations")
-    .insert({
-      code: values.code,
-      zone_number: values.zoneNumber,
-      name: values.name,
-      short_name: values.shortName,
-      category: values.category,
-      summary: values.summary || null,
-      tags: values.tags,
-      base_success_percent: values.baseSuccessPercent,
-      active: values.active,
-      sort_order: values.sortOrder,
-    })
+    .insert(locationPayload(values, supportsMap))
     .select()
     .single();
 }
 
-export function updateExplorationLocation(locationId, values) {
+export function updateExplorationLocation(locationId, values, supportsMap = true) {
   return supabase
     .from("exploration_locations")
     .update({
-      code: values.code,
-      zone_number: values.zoneNumber,
-      name: values.name,
-      short_name: values.shortName,
-      category: values.category,
-      summary: values.summary || null,
-      tags: values.tags,
-      base_success_percent: values.baseSuccessPercent,
-      active: values.active,
-      sort_order: values.sortOrder,
+      ...locationPayload(values, supportsMap),
       updated_at: new Date().toISOString(),
     })
     .eq("id", locationId)
@@ -191,7 +192,7 @@ export async function getFollowerExplorations() {
       *,
       follower:follower_master (name),
       character:characters (character_name, player_name),
-      location:exploration_locations (code, short_name, name, category, tags),
+      location:exploration_locations (code, short_name, name, category, tags, base_success_percent),
       reward:items (name)
     `)
     .order("status", { ascending: false })
@@ -224,10 +225,8 @@ export function getFollowerRewardItems() {
     .order("name", { ascending: true });
 }
 
-export function rollFollowerExploration(missionId) {
-  return supabase.rpc("roll_follower_exploration", {
-    p_mission_id: missionId,
-  });
+export function getExplorationLocationNotes() {
+  return supabase.from("exploration_location_notes").select("location_id,note");
 }
 
 export function resolveFollowerExploration({

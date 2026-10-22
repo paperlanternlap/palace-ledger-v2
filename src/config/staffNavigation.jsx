@@ -17,6 +17,7 @@ export const STAFF_NAV_ITEMS = [
   { id: "item-requests", label: "คำร้อง", title: "คำร้องและงานแม่งาน", icon: ClipboardList },
   { id: "acquisition-requests", label: "คำร้องจัดหา", title: "คำร้องจัดหาไอเท็ม", icon: ShoppingBasket },
   { id: "exploration-missions", label: "ภารกิจสำรวจ", title: "ภารกิจสำรวจ", icon: Compass },
+  { id: "exploration-map", label: "แผนที่", title: "แผนที่และพื้นที่สำรวจ", icon: Compass },
   { id: "inventory", label: "คลังไอเท็ม", title: "คลังไอเท็ม", icon: Gift },
   { id: "followers", label: "ผู้ติดตาม", title: "จัดการผู้ติดตาม", icon: UserRoundCheck },
   { label: "ประวัติ", icon: FileText, disabled: true },

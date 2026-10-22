@@ -312,18 +312,6 @@ export function CreateFollowerModal({ onClose, onCreated }) {
             </datalist>
           </fieldset>
 
-          <label>
-            ส่งภารกิจได้ต่อสัปดาห์
-            <input
-              type="number"
-              min="0"
-              value={form.weeklyMissionLimit}
-              onChange={(event) =>
-                update("weeklyMissionLimit", event.target.value)
-              }
-            />
-          </label>
-
           {error && <p className="follower-form-error">{error}</p>}
 
           <div className="modal-actions">
@@ -511,17 +499,6 @@ export function EditFollowerModal({ follower, onClose, onSaved }) {
                 min="0"
                 value={form.cost}
                 onChange={(event) => update("cost", event.target.value)}
-              />
-            </label>
-            <label>
-              ภารกิจต่อสัปดาห์
-              <input
-                type="number"
-                min="0"
-                value={form.weeklyMissionLimit}
-                onChange={(event) =>
-                  update("weeklyMissionLimit", event.target.value)
-                }
               />
             </label>
           </div>

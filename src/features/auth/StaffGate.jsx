@@ -163,5 +163,7 @@ export function StaffGate({ children }) {
     return <AccessDenied email={authState.session.user.email} />;
   }
 
-  return children;
+  return typeof children === "function"
+    ? children({ staff: authState.staff, user: authState.session.user })
+    : children;
 }
